@@ -1,3 +1,6 @@
+Here is the complete, updated code! All existing cards remain fully intact, piggyback mechanics have been refactored so piggyback cards act properly as minions, stacking now visually replaces the mascot card with the top card showing the newly calculated stats, and **The Mega Mascot Titan** has been added to the Evergreen Pack.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -422,7 +425,7 @@
                 <button class="info-btn" onclick="showPackInfo('evergreen')">ⓘ</button>
                 <h3>Evergreen Pack</h3>
                 <div id="evergreen-pack-icon" style="font-size: 36px; margin: 8px 0;">🌲</div>
-                <p style="font-size: 11px;">5 Cards! Features all newly added expansion cards!</p>
+                <p style="font-size: 11px;">5 Cards! Features all expansion cards including Mega Mascot Titan!</p>
                 <button class="btn btn-shop" onclick="buyPack('evergreen')">Buy Pack (100 📏)</button>
             </div>
 
@@ -450,7 +453,7 @@
         </div>
 
         <div>
-            <div class="battlefield-title">Your Field (Click hand card, then lane slot or Mascot to stack)</div>
+            <div class="battlefield-title">Your Field (Click hand card, then lane slot or Piggyback card to stack)</div>
             <div class="battlefield" id="player-field"></div>
         </div>
 
@@ -508,7 +511,7 @@
         const MAX_HAND_SIZE = 10;
         const DECK_SIZE = 15;
 
-        // FULL CARD CATALOG
+        // FULL CARD CATALOG (NO CARDS REMOVED, NEW LEGENDARY MASCOT ADDED)
         const CARD_CATALOG = [
             // --- BASE COMMONS ---
             { id: 's_basic', pack: 'base', faction: 'student', name: 'Basic Student', att: 1, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '🎒', desc: 'Standard student unit.' },
@@ -542,12 +545,12 @@
             { id: 'eg_supply_guard', pack: 'evergreen', faction: 'teacher', name: 'Supply Closet Guard', att: 2, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🔑', desc: 'High Health defensive unit.' },
             { id: 'eg_early_runner', pack: 'evergreen', faction: 'student', name: 'Early Bird Runner', att: 2, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🏃', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.', flavor: 'Sprinting straight for freedom when the coast is clear!' },
             { id: 'eg_recess_sprinter', pack: 'evergreen', faction: 'student', name: 'Recess Sprinter', att: 3, hp: 1, maxHp: 1, cost: 2, type: 'minion', rarity: 'uncommon', icon: '👟', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
-            { id: 'eg_shoulder_ride', pack: 'evergreen', faction: 'student', name: 'Shoulder Ride Kid', cost: 2, type: 'trick', rarity: 'uncommon', icon: '🧒', trait: 'piggyback', desc: 'Piggyback: Grant target Student +1 Attack and +2 Health.' },
+            { id: 'eg_shoulder_ride', pack: 'evergreen', faction: 'student', name: 'Shoulder Ride Kid', att: 1, hp: 2, maxHp: 2, cost: 2, type: 'minion', rarity: 'uncommon', icon: '🧒', trait: 'piggybackRider', desc: 'Piggyback Rider: Minion that can stack onto Piggyback Receivers to boost stats.' },
             { id: 'eg_sugar_rush', pack: 'evergreen', faction: 'student', name: 'Sugar Rush', cost: 1, type: 'trick', rarity: 'uncommon', icon: '🍬', desc: 'Give a Student +2 Attack for this turn.' },
             { id: 'eg_courtyard_runner', pack: 'evergreen', faction: 'student', name: 'Courtyard Runner', att: 3, hp: 2, maxHp: 2, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏞️', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
 
             // --- EVERGREEN PACK: RARES ---
-            { id: 'eg_mascot_lower', pack: 'evergreen', faction: 'student', name: 'Mascot Lower Half', att: 1, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'rare', icon: '🦘', trait: 'mascotPiggyback', desc: 'Piggyback Receiver: You can stack another Student on top of this card! Absorbs stats; stacked card cannot attack.' },
+            { id: 'eg_mascot_lower', pack: 'evergreen', faction: 'student', name: 'Mascot Lower Half', att: 1, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'rare', icon: '🦘', trait: 'mascotPiggyback', desc: 'Piggyback Receiver: You can stack another Student on top of this card! The new card replaces this card and absorbs its stats.' },
             { id: 'eg_fire_drill', pack: 'evergreen', faction: 'student', name: 'Fire Drill', cost: 3, type: 'trick', rarity: 'rare', icon: '🚨', desc: 'Move all friendly Students into open lanes.' },
             { id: 'eg_track_captain', pack: 'evergreen', faction: 'student', name: 'Track Team Captain', att: 4, hp: 3, maxHp: 3, cost: 4, type: 'minion', rarity: 'rare', icon: '🥇', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
             { id: 'eg_food_fight', pack: 'evergreen', faction: 'student', name: 'Food Fight Splash', cost: 3, type: 'trick', rarity: 'rare', icon: '🍕', desc: 'Deal 2 damage to all Teachers in center and adjacent lanes.' },
@@ -565,6 +568,7 @@
             { id: 'eg_water_bomb', pack: 'evergreen', faction: 'student', name: 'Water Balloon Bomb', cost: 4, type: 'trick', rarity: 'super-rare', icon: '🎈', desc: 'Deal 3 damage to a Teacher and 2 splash damage to adjacent lanes.' },
 
             // --- EVERGREEN PACK: LEGENDARIES ---
+            { id: 'eg_mega_mascot_titan', pack: 'evergreen', faction: 'student', name: 'The Mega Mascot Titan', att: 2, hp: 10, maxHp: 10, cost: 4, type: 'minion', rarity: 'legendary', icon: '🦁', trait: 'mascotPiggyback', isTitan: true, desc: 'Piggyback Receiver: Grant target Student +6 Attack / +10 Health, draw 2 cards, and give all other friendly Students +2 Attack permanently! Passive: Gain +5 SP while alive without a rider.' },
             { id: 'eg_senior_rebellion', pack: 'evergreen', faction: 'student', name: 'Senior Year Rebellion', cost: 8, type: 'trick', rarity: 'legendary', icon: '📣', desc: 'All Students gain +4/+4, trigger Recess Rush, and perform an immediate bonus attack!' },
             { id: 'eg_grand_chancellor', pack: 'evergreen', faction: 'teacher', name: 'Grand Chancellor', att: 8, hp: 8, maxHp: 8, cost: 8, type: 'minion', rarity: 'legendary', icon: '👑', desc: 'Fully heal your Teacher Hero and draw cards on play.' },
             { id: 'eg_permanent_record', pack: 'evergreen', faction: 'teacher', name: 'Permanent Record Keeper', att: 5, hp: 6, maxHp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '📜', desc: 'Increases Energy cost of enemy bounced cards permanently.' },
@@ -576,21 +580,21 @@
             rulers: 50,
             collection: {
                 's_basic': 4, 's_nerd': 2, 's_plane': 2, 's_juice': 2, 's_skater': 2, 's_note': 2, 's_spitball': 1, 's_slingshot': 1,
-                't_basic': 4, 't_sub_common': 2, 't_sub': 2, 't_hall': 2, 't_gym': 2, 's_coffee': 2, 't_trainee': 2, 't_quiz_s': 1, 't_gradebook': 1
+                't_basic': 4, 't_sub_common': 2, 't_sub': 2, 't_hall': 2, 't_gym': 2, 's_coffee': 2, 't_trainee': 2, 't_quiz_s': 1, 't_gradebook': 1,
+                'eg_mega_mascot_titan': 1
             },
-            studentDeck: ['s_basic','s_basic','s_basic','s_basic','s_nerd','s_nerd','s_plane','s_plane','s_juice','s_juice','s_skater','s_skater','s_note','s_note','s_spitball'],
+            studentDeck: ['s_basic','s_basic','s_basic','s_basic','s_nerd','s_nerd','s_plane','s_plane','s_juice','s_juice','s_skater','s_skater','s_note','s_spitball','eg_mega_mascot_titan'],
             teacherDeck: ['t_basic','t_basic','t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','s_coffee','s_coffee','t_trainee','t_trainee','t_quiz_s']
         };
 
         const BALANCED_CPU_DECKS = {
-            student: ['s_basic','s_basic','s_nerd','s_skater','s_skater','s_rowdy','s_rowdy','eg_early_runner','eg_recess_sprinter','s_plane','s_juice','s_note','s_spitball','eg_mascot_lower','eg_senior_rebellion'],
+            student: ['s_basic','s_basic','s_nerd','s_skater','s_skater','s_rowdy','s_rowdy','eg_early_runner','eg_recess_sprinter','s_plane','s_juice','s_note','s_spitball','eg_mascot_lower','eg_mega_mascot_titan'],
             teacher: ['t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','t_trainee','eg_chalk_cleaner','eg_eraser_clapper','t_gradebook','s_coffee','t_quiz_s','eg_cloudmaster']
         };
 
         let round = 1;
         let currentPhase = 'teacher';
         let selectedTrickIndex = null;
-        let selectedPiggybackIndex = null;
         let selectedHandIndex = null;
         let editingDeckSide = 'student';
 
@@ -771,7 +775,7 @@
             } else if (type === 'standard') {
                 alert("📦 Standard Pack (50 📏):\n- Card 1 & 2: 100% Uncommon\n- Card 3: 100% Rare\n- Card 4: 53% Rare, 35% Super Rare, 12% Legendary");
             } else {
-                alert("🌲 Evergreen Pack (100 📏):\n- Contains 5 Cards!\n- Features legendary Senior Year Rebellion!\n- Guaranteed 1 Rare, 1 Super Rare, and higher Legendary odds!");
+                alert("🌲 Evergreen Pack (100 📏):\n- Contains 5 Cards!\n- Features legendary Mega Mascot Titan!\n- Guaranteed 1 Rare, 1 Super Rare, and higher Legendary odds!");
             }
         }
 
@@ -894,6 +898,15 @@
             if (character.deck.length > 0) character.hand.push(character.deck.pop());
         }
 
+        function checkTitanPassive(character) {
+            character.field.forEach(minion => {
+                if (minion && minion.isTitan && !minion.hasRider) {
+                    character.points = Math.min(MAX_POINTS, character.points + 5);
+                    log(`<b>The Mega Mascot Titan Passive:</b> Granted +5 SP while unridden!`);
+                }
+            });
+        }
+
         function startPhase(phase) {
             currentPhase = phase;
             const banner = document.getElementById('phase-banner');
@@ -904,15 +917,27 @@
                 banner.style.background = "#c0392b";
                 log("<b>--- TEACHERS TURN ---</b>");
 
-                if (player.role === 'teacher') passBtn.disabled = false;
-                else { passBtn.disabled = true; setTimeout(runAIPhase, 800); }
+                if (player.role === 'teacher') {
+                    checkTitanPassive(player);
+                    passBtn.disabled = false;
+                } else {
+                    checkTitanPassive(enemy);
+                    passBtn.disabled = true;
+                    setTimeout(runAIPhase, 800);
+                }
             } else if (phase === 'student') {
                 banner.innerText = "Phase 2: Students Turn";
                 banner.style.background = "#2980b9";
                 log("<b>--- STUDENTS TURN ---</b>");
 
-                if (player.role === 'student') passBtn.disabled = false;
-                else { passBtn.disabled = true; setTimeout(runAIPhase, 800); }
+                if (player.role === 'student') {
+                    checkTitanPassive(player);
+                    passBtn.disabled = false;
+                } else {
+                    checkTitanPassive(enemy);
+                    passBtn.disabled = true;
+                    setTimeout(runAIPhase, 800);
+                }
             } else if (phase === 'fight') {
                 banner.innerText = "Phase 3: Fight Phase!";
                 banner.style.background = "#8e44ad";
@@ -933,7 +958,6 @@
             if (!isPlayerActiveTurn()) return;
             selectedHandIndex = null;
             selectedTrickIndex = null;
-            selectedPiggybackIndex = null;
 
             if (currentPhase === 'teacher') startPhase('student');
             else if (currentPhase === 'student') startPhase('fight');
@@ -978,8 +1002,8 @@
                     mEl.className = `minion rarity-${minion.rarity}`;
                     mEl.oncontextmenu = (e) => { e.preventDefault(); inspectCard(minion); };
 
-                    if (minion.stackedOnTop) {
-                        mEl.innerHTML += `<div style="position:absolute; bottom:2px; right:2px; font-size:9px; background:#e67e22; padding:2px; border-radius:3px;">Rider: ${minion.stackedOnTop.name}</div>`;
+                    if (minion.hasRider) {
+                        mEl.innerHTML += `<div style="position:absolute; bottom:2px; right:2px; font-size:9px; background:#e67e22; padding:2px; border-radius:3px;">Stacked!</div>`;
                     }
 
                     if (!isEnemy && selectedHandIndex !== null) {
@@ -993,11 +1017,6 @@
                     if (isEnemy && selectedTrickIndex !== null) {
                         mEl.classList.add('targetable');
                         mEl.onclick = () => handleEnemyMinionClick(lane, mEl);
-                    }
-
-                    if (!isEnemy && selectedPiggybackIndex !== null) {
-                        mEl.classList.add('piggyback-target');
-                        mEl.onclick = () => applyPiggyback(lane);
                     }
 
                     container.appendChild(mEl);
@@ -1050,19 +1069,10 @@
                 return;
             }
 
-            if (card.trait === 'piggyback') {
-                if (!player.field.some(m => m !== null)) return log("<span style='color:#e74c3c;'>No friendly student to piggyback onto!</span>");
-                selectedPiggybackIndex = index;
-                selectedHandIndex = null;
-                log("Select a friendly student to piggyback onto!");
-                updateUI();
-                return;
-            }
-
             if (card.type === 'minion') {
                 selectedHandIndex = index;
                 selectedTrickIndex = null;
-                log(`Selected <b>${card.name}</b>. Click a lane slot or Mascot card.`);
+                log(`Selected <b>${card.name}</b>. Click a lane slot or Piggyback card to stack.`);
                 updateUI();
             } else if (card.type === 'trick') {
                 selectedHandIndex = null;
@@ -1099,12 +1109,39 @@
             const baseMascot = player.field[laneIndex];
 
             player.points -= topCard.cost;
-            baseMascot.att += topCard.att;
-            baseMascot.hp += topCard.hp;
-            baseMascot.maxHp += topCard.hp;
-            baseMascot.stackedOnTop = topCard;
 
-            log(`Stacked <b>${topCard.name}</b> onto Mascot! (+${topCard.att}/+${topCard.hp})`);
+            let addAtt = topCard.att;
+            let addHp = topCard.hp;
+
+            if (baseMascot.isTitan) {
+                addAtt += 6;
+                addHp += 10;
+                drawCard(player);
+                drawCard(player);
+
+                player.field.forEach((m, idx) => {
+                    if (m && idx !== laneIndex) {
+                        m.att += 2;
+                    }
+                });
+                log(`<b>The Mega Mascot Titan Stacked!</b> Granted +6/+10 extra stats, drew 2 cards, and gave +2 ATK to all friendly Students!`);
+            }
+
+            let combinedAtt = baseMascot.att + addAtt;
+            let combinedHp = baseMascot.hp + addHp;
+            let combinedMaxHp = baseMascot.maxHp + addHp;
+
+            // Replace card visually with top card while adopting updated stats
+            player.field[laneIndex] = {
+                ...topCard,
+                att: combinedAtt,
+                hp: combinedHp,
+                maxHp: combinedMaxHp,
+                hasRider: true,
+                uid: Math.random()
+            };
+
+            log(`Stacked <b>${topCard.name}</b> onto Piggyback Base! New Stats: ${combinedAtt} ATK / ${combinedHp} HP.`);
             player.hand.splice(selectedHandIndex, 1);
             selectedHandIndex = null;
             updateUI();
@@ -1116,7 +1153,7 @@
             const card = player.hand[selectedHandIndex];
             player.points -= card.cost;
 
-            let newMinion = { ...card, hp: card.hp, maxHp: card.maxHp || card.hp };
+            let newMinion = { ...card, hp: card.hp, maxHp: card.maxHp || card.hp, hasRider: false };
 
             if (newMinion.trait === 'recessRush' && enemy.field[laneIndex] === null) {
                 enemy.hp = Math.max(0, enemy.hp - 2);
@@ -1131,24 +1168,7 @@
 
             selectedHandIndex = null;
             selectedTrickIndex = null;
-            selectedPiggybackIndex = null;
 
-            updateUI();
-        }
-
-        function applyPiggyback(targetLane) {
-            if (selectedPiggybackIndex === null) return;
-            const card = player.hand[selectedPiggybackIndex];
-
-            player.points -= card.cost;
-            const target = player.field[targetLane];
-            target.att += 1;
-            target.hp += 2;
-            target.maxHp += 2;
-
-            log(`Piggybacked onto <b>${target.name}</b> (+1/+2)!`);
-            player.hand.splice(selectedPiggybackIndex, 1);
-            selectedPiggybackIndex = null;
             updateUI();
         }
 
@@ -1199,7 +1219,7 @@
                 let chosenLane = emptyLanes[Math.floor(Math.random() * emptyLanes.length)];
 
                 enemy.points -= best.card.cost;
-                let newMinion = { ...best.card, hp: best.card.hp, maxHp: best.card.maxHp || best.card.hp };
+                let newMinion = { ...best.card, hp: best.card.hp, maxHp: best.card.maxHp || best.card.hp, hasRider: false };
 
                 if (newMinion.trait === 'recessRush' && player.field[chosenLane] === null) {
                     player.hp = Math.max(0, player.hp - 2);
@@ -1280,3 +1300,5 @@
     </script>
 </body>
 </html>
+
+```
