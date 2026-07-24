@@ -32,7 +32,6 @@
 
         .hidden { display: none !important; }
 
-        /* Navigation Header */
         #top-nav {
             display: flex;
             gap: 15px;
@@ -53,7 +52,6 @@
             color: #f1c40f;
         }
 
-        /* Screens */
         .screen-container {
             width: 100%;
             max-width: 950px;
@@ -82,7 +80,6 @@
         .btn-action { background-color: #2ecc71; color: white; }
         .btn-shop { background-color: #f1c40f; color: #2c3e50; }
 
-        /* Board Layout */
         #game-board {
             width: 100%;
             max-width: 950px;
@@ -126,6 +123,11 @@
             position: relative;
         }
 
+        .battlefield.drag-over {
+            border-color: #f1c40f;
+            background: #1abc9c;
+        }
+
         .battlefield-title {
             font-size: 11px;
             text-transform: uppercase;
@@ -134,7 +136,6 @@
             font-weight: bold;
         }
 
-        /* Cards & Minions */
         .card, .minion {
             width: 110px;
             height: 150px;
@@ -154,6 +155,13 @@
             border: 3px solid var(--rarity-common);
             flex-shrink: 0;
             cursor: pointer;
+        }
+
+        .card[draggable="true"] {
+            cursor: grab;
+        }
+        .card[draggable="true"]:active {
+            cursor: grabbing;
         }
 
         .card:hover {
@@ -234,7 +242,6 @@
             animation: pulseYellow 1s infinite alternate;
         }
 
-        /* Hand Layout */
         .hand-container {
             background: #34495e;
             padding: 10px 15px;
@@ -248,7 +255,6 @@
             overflow-x: auto;
         }
 
-        /* Deck & Collection Grids */
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -337,13 +343,13 @@
             <div style="background: #34495e; padding: 15px; border-radius: 8px; text-align: center; width: 200px;">
                 <h3>Mini Pack</h3>
                 <div style="font-size: 36px; margin: 8px 0;">📫</div>
-                <p style="font-size: 11px;">Contains guaranteed 1 Uncommon and 1 Rare card!</p>
+                <p style="font-size: 11px;">Contains 2 cards! Guaranteed Uncommon + chance for Rare, Super Rare & Legendary!</p>
                 <button class="btn btn-shop" onclick="buyPack('mini')">Buy Mini Pack (25 📏)</button>
             </div>
             <div style="background: #34495e; padding: 15px; border-radius: 8px; text-align: center; width: 200px;">
                 <h3>Standard Pack</h3>
                 <div style="font-size: 36px; margin: 8px 0;">📦</div>
-                <p style="font-size: 11px;">Guaranteed 2 Uncommons, 1 Rare + chance for Super Rare & Legendary!</p>
+                <p style="font-size: 11px;">Contains 4 cards! Higher chances for Super Rare & Legendary!</p>
                 <button class="btn btn-shop" onclick="buyPack('standard')">Buy Pack (50 📏)</button>
             </div>
             <div style="flex-grow: 1; min-width: 250px;">
@@ -370,8 +376,8 @@
         </div>
 
         <div>
-            <div class="battlefield-title">Your Field</div>
-            <div class="battlefield" id="player-field"></div>
+            <div class="battlefield-title">Your Field (Drag & Drop or Click Cards Here)</div>
+            <div class="battlefield" id="player-field" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnField(event)"></div>
         </div>
 
         <div class="hero-banner" id="player-banner">
@@ -394,7 +400,6 @@
         const MAX_HAND_SIZE = 10;
         const DECK_SIZE = 15;
 
-        // Combined Master Catalog
         const CARD_CATALOG = [
             // --- UNCOMMONS ---
             { id: 's_coffee', faction: 'teacher', name: 'Coffee Refill', cost: 2, type: 'trick', healTeacher: 3, rarity: 'uncommon', icon: '☕' },
@@ -438,7 +443,6 @@
             { id: 't_basic', faction: 'teacher', name: 'Basic Teacher', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '📏' }
         ];
 
-        // Global Player Data - starter collections set up properly for full 15 card decks
         let playerProfile = {
             rulers: 50,
             collection: {
@@ -449,12 +453,18 @@
             teacherDeck: ['t_basic','t_basic','t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','s_coffee','s_coffee','t_trainee','t_trainee','t_quiz_s']
         };
 
-        // Battle State
+        // Balanced CPU Deck Templates (Not default, not OP)
+        const BALANCED_CPU_DECKS = {
+            student: ['s_basic','s_basic','s_nerd','s_skater','s_skater','s_rowdy','s_rowdy','s_backpack','s_twins','s_plane','s_juice','s_note','s_spitball','s_trombone','s_rebellion'],
+            teacher: ['t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','t_trainee','t_proctor','t_librarian','t_gradebook','s_coffee','t_quiz_s','t_quiz_m']
+        };
+
         let round = 1;
         let currentPhase = 'teacher';
         let selectedTrickIndex = null;
         let selectedPiggybackIndex = null;
         let editingDeckSide = 'student';
+        let draggedHandIndex = null;
 
         let player = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
         let enemy = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
@@ -493,7 +503,6 @@
             updateRulersDisplay();
         }
 
-        // --- DECK BUILDER ---
         function switchDeckSide(side) {
             editingDeckSide = side;
             document.getElementById('deck-side-title').innerText = side.charAt(0).toUpperCase() + side.slice(1);
@@ -571,7 +580,11 @@
             }
         }
 
-        // --- SHOP & PACK OPENINGS ---
+        function getRandomCardByRarity(rarity) {
+            const matches = CARD_CATALOG.filter(c => c.rarity === rarity);
+            return matches[Math.floor(Math.random() * matches.length)];
+        }
+
         function buyPack(type) {
             const cost = (type === 'mini') ? 25 : 50;
             if (playerProfile.rulers < cost) {
@@ -586,24 +599,32 @@
             packResultsGrid.innerHTML = '';
 
             let pulledCards = [];
-            const uncommons = CARD_CATALOG.filter(c => c.rarity === 'uncommon');
-            const rares = CARD_CATALOG.filter(c => c.rarity === 'rare');
-            const superRares = CARD_CATALOG.filter(c => c.rarity === 'super-rare');
-            const legendaries = CARD_CATALOG.filter(c => c.rarity === 'legendary');
 
             if (type === 'mini') {
-                pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
-                pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
-            } else {
-                pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
-                pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
-                pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
+                // Card 1: Guaranteed Uncommon
+                pulledCards.push(getRandomCardByRarity('uncommon'));
 
-                const rand = Math.random();
-                if (rand < 0.08) pulledCards.push(legendaries[Math.floor(Math.random() * legendaries.length)]);
-                else if (rand < 0.25) pulledCards.push(superRares[Math.floor(Math.random() * superRares.length)]);
-                else if (rand < 0.55) pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
-                else pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
+                // Card 2: Chance for Rare, Super Rare, or Legendary
+                const roll = Math.random();
+                if (roll < 0.05) {
+                    pulledCards.push(getRandomCardByRarity('legendary'));
+                } else if (roll < 0.20) {
+                    pulledCards.push(getRandomCardByRarity('super-rare'));
+                } else if (roll < 0.60) {
+                    pulledCards.push(getRandomCardByRarity('rare'));
+                } else {
+                    pulledCards.push(getRandomCardByRarity('uncommon'));
+                }
+            } else {
+                // Standard Pack (4 Cards)
+                pulledCards.push(getRandomCardByRarity('uncommon'));
+                pulledCards.push(getRandomCardByRarity('uncommon'));
+                pulledCards.push(getRandomCardByRarity('rare'));
+
+                const roll = Math.random();
+                if (roll < 0.12) pulledCards.push(getRandomCardByRarity('legendary'));
+                else if (roll < 0.35) pulledCards.push(getRandomCardByRarity('super-rare'));
+                else pulledCards.push(getRandomCardByRarity('rare'));
             }
 
             pulledCards.forEach(card => {
@@ -644,13 +665,12 @@
             return cardEl;
         }
 
-        // --- GAME PLAY MECHANICS ---
         function startGame(role) {
             player.role = role;
             enemy.role = (role === 'student') ? 'teacher' : 'student';
 
             let pDeckList = player.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
-            let eDeckList = enemy.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
+            let eDeckList = BALANCED_CPU_DECKS[enemy.role];
 
             if (pDeckList.length < DECK_SIZE) {
                 alert(`Your ${player.role} deck must have 15 cards! Current count: ${pDeckList.length}`);
@@ -689,7 +709,6 @@
             const banner = document.getElementById('phase-banner');
             const passBtn = document.getElementById('end-turn-btn');
 
-            // Trigger Shapeshifting Sub
             [player, enemy].forEach(char => {
                 if (char.role === 'teacher') {
                     char.field.forEach(minion => {
@@ -765,12 +784,50 @@
             handEl.innerHTML = '';
             player.hand.forEach((card, index) => {
                 const cardEl = createCardElement(card, true);
+                
+                // Add Drag & Drop Attributes
+                cardEl.setAttribute('draggable', 'true');
+                cardEl.ondragstart = (e) => handleDragStart(e, index);
                 cardEl.onclick = () => handleHandCardClick(index);
+                
                 handEl.appendChild(cardEl);
             });
 
             renderField('player-field', player.field, false);
             renderField('enemy-field', enemy.field, true);
+        }
+
+        // DRAG & DROP HANDLERS
+        function handleDragStart(e, index) {
+            if (!isPlayerActiveTurn()) {
+                e.preventDefault();
+                return;
+            }
+            draggedHandIndex = index;
+            e.dataTransfer.setData('text/plain', index);
+        }
+
+        function handleDragOver(e) {
+            if (!isPlayerActiveTurn()) return;
+            e.preventDefault();
+            const bf = document.getElementById('player-field');
+            bf.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            const bf = document.getElementById('player-field');
+            bf.classList.remove('drag-over');
+        }
+
+        function handleDropOnField(e) {
+            e.preventDefault();
+            const bf = document.getElementById('player-field');
+            bf.classList.remove('drag-over');
+
+            if (draggedHandIndex !== null && isPlayerActiveTurn()) {
+                handleHandCardClick(draggedHandIndex);
+                draggedHandIndex = null;
+            }
         }
 
         function renderField(elementId, fieldList, isEnemy) {
@@ -804,7 +861,6 @@
                 return;
             }
 
-            // Check No Pranks lockout
             if (card.type === 'trick' && player.role === 'student') {
                 let hasLibrarian = enemy.field.some(m => m.trait === 'noPranks');
                 if (hasLibrarian) {
@@ -828,7 +884,6 @@
                 player.points -= card.cost;
                 let newMinion = { ...card };
                 
-                // On the Move
                 if (newMinion.trait === 'onTheMove') {
                     transformTeacher(newMinion, false);
                 }
@@ -837,7 +892,6 @@
                 player.hand.splice(index, 1);
                 log(`You summoned <b>${newMinion.name}</b>.`);
 
-                // Inseparable Logic
                 if (newMinion.trait === 'inseparable') {
                     triggerInseparable(player, newMinion);
                 }
@@ -876,7 +930,6 @@
                 log("<b>Inseparable!</b> Students gained +2/+2!");
             }
 
-            // Rebellion Leader synergy
             char.field.forEach(m => {
                 if (m.trait === 'rebellion') {
                     char.field.forEach(unit => { unit.att += 1; unit.hp += 1; });
@@ -910,7 +963,6 @@
                 showDamage(element, card.damage);
                 log(`Used <b>${card.name}</b> on ${target.name} for ${card.damage} DMG.`);
 
-                // Force Discard on Pop Quiz Master
                 if (target.trait === 'onDamagedDiscard' && player.hand.length > 0) {
                     player.hand.pop();
                     log("Pop Quiz Master forced you to discard a card!");
@@ -927,7 +979,6 @@
             }
         }
 
-        // --- AI LOGIC ---
         function runAIPhase() {
             let played = true;
             while (played) {
@@ -963,7 +1014,6 @@
             }, 1000);
         }
 
-        // --- FIGHT PHASE ---
         async function runFightPhase() {
             let maxLanes = Math.max(player.field.length, enemy.field.length);
 
@@ -976,7 +1026,6 @@
                     pMinion.hp -= eMinion.att;
                     log(`Lane ${i+1}: ${pMinion.name} and ${eMinion.name} fought!`);
 
-                    // On Damaged Trait
                     if (eMinion.trait === 'onDamagedDiscard' && player.hand.length > 0) {
                         player.hand.pop();
                         log("Pop Quiz Master forced you to discard a card!");
