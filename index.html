@@ -49,6 +49,9 @@
             font-size: 16px;
             font-weight: bold;
             color: #f1c40f;
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
 
         .screen-container {
@@ -78,6 +81,7 @@
         .btn-teacher { background-color: #c0392b; color: white; }
         .btn-action { background-color: #2ecc71; color: white; }
         .btn-shop { background-color: #f1c40f; color: #2c3e50; }
+        .btn-admin { background-color: #e74c3c; color: white; padding: 6px 12px; font-size: 12px; }
 
         #game-board {
             width: 100%;
@@ -361,7 +365,8 @@
             <button class="btn btn-shop" onclick="showScreen('shop-screen')">Shop</button>
         </div>
         <div class="currency-display">
-            📏 Golden Rulers: <span id="rulers-count">50</span>
+            <span>📏 Golden Rulers: <span id="rulers-count">50</span></span>
+            <button class="btn btn-admin" onclick="openAdminPrompt()">⚙️ Admin</button>
         </div>
     </div>
 
@@ -435,7 +440,7 @@
         </div>
 
         <div>
-            <div class="battlefield-title">Your Field (Click hand card, then lane slot to place)</div>
+            <div class="battlefield-title">Your Field (Click hand card, then lane slot or Mascot to stack)</div>
             <div class="battlefield" id="player-field"></div>
         </div>
 
@@ -466,12 +471,22 @@
         </div>
     </div>
 
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="modal-card" style="border-color: #e74c3c;">
+            <button class="modal-close" onclick="closeAdmin()">✕</button>
+            <h2>Admin Panel</h2>
+            <p style="font-size: 12px;">Cheat Menu Activated!</p>
+            <button class="btn btn-shop" style="width: 100%; margin-bottom: 10px;" onclick="addAdminRulers()">+1000 Golden Rulers</button>
+            <button class="btn btn-main" style="width: 100%;" onclick="addAdminAllCards()">Unlock 4x Every Card</button>
+        </div>
+    </div>
+
     <script>
         const MAX_POINTS = 15;
         const MAX_HAND_SIZE = 10;
         const DECK_SIZE = 15;
 
-        // FULL CARD CATALOG - INCLUDES ALL BASE CARDS + ALL EVERGREEN CARDS
+        // FULL CARD CATALOG
         const CARD_CATALOG = [
             // --- BASE COMMONS ---
             { id: 's_basic', pack: 'base', faction: 'student', name: 'Basic Student', att: 1, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '🎒', desc: 'Standard student unit.' },
@@ -510,7 +525,7 @@
             { id: 'eg_courtyard_runner', pack: 'evergreen', faction: 'student', name: 'Courtyard Runner', att: 3, hp: 2, maxHp: 2, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏞️', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
 
             // --- EVERGREEN PACK: RARES ---
-            { id: 'eg_mascot_lower', pack: 'evergreen', faction: 'student', name: 'Mascot Lower Half', cost: 3, type: 'trick', rarity: 'rare', icon: '🦘', trait: 'piggyback', desc: 'Piggyback: Grant target Student +1 Attack and +4 Health.' },
+            { id: 'eg_mascot_lower', pack: 'evergreen', faction: 'student', name: 'Mascot Lower Half', att: 1, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'rare', icon: '🦘', trait: 'mascotPiggyback', desc: 'Piggyback Receiver: You can stack another Student on top of this card! Absorbs stats; stacked card cannot attack.' },
             { id: 'eg_fire_drill', pack: 'evergreen', faction: 'student', name: 'Fire Drill', cost: 3, type: 'trick', rarity: 'rare', icon: '🚨', desc: 'Move all friendly Students into open lanes.' },
             { id: 'eg_track_captain', pack: 'evergreen', faction: 'student', name: 'Track Team Captain', att: 4, hp: 3, maxHp: 3, cost: 4, type: 'minion', rarity: 'rare', icon: '🥇', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
             { id: 'eg_food_fight', pack: 'evergreen', faction: 'student', name: 'Food Fight Splash', cost: 3, type: 'trick', rarity: 'rare', icon: '🍕', desc: 'Deal 2 damage to all Teachers in center and adjacent lanes.' },
@@ -528,6 +543,7 @@
             { id: 'eg_water_bomb', pack: 'evergreen', faction: 'student', name: 'Water Balloon Bomb', cost: 4, type: 'trick', rarity: 'super-rare', icon: '🎈', desc: 'Deal 3 damage to a Teacher and 2 splash damage to adjacent lanes.' },
 
             // --- EVERGREEN PACK: LEGENDARIES ---
+            { id: 'eg_senior_rebellion', pack: 'evergreen', faction: 'student', name: 'Senior Year Rebellion', cost: 8, type: 'trick', rarity: 'legendary', icon: '📣', desc: 'All Students gain +4/+4, trigger Recess Rush, and perform an immediate bonus attack!' },
             { id: 'eg_grand_chancellor', pack: 'evergreen', faction: 'teacher', name: 'Grand Chancellor', att: 8, hp: 8, maxHp: 8, cost: 8, type: 'minion', rarity: 'legendary', icon: '👑', desc: 'Fully heal your Teacher Hero and draw cards on play.' },
             { id: 'eg_permanent_record', pack: 'evergreen', faction: 'teacher', name: 'Permanent Record Keeper', att: 5, hp: 6, maxHp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '📜', desc: 'Increases Energy cost of enemy bounced cards permanently.' },
             { id: 'eg_prom_pair', pack: 'evergreen', faction: 'student', name: 'The Prom Pair', att: 5, hp: 5, maxHp: 5, cost: 6, type: 'minion', rarity: 'legendary', icon: '👑', trait: 'inseparable', desc: 'Inseparable. Fully heal Student Hero and friendly units on play.' },
@@ -545,7 +561,7 @@
         };
 
         const BALANCED_CPU_DECKS = {
-            student: ['s_basic','s_basic','s_nerd','s_skater','s_skater','s_rowdy','s_rowdy','eg_early_runner','eg_recess_sprinter','s_plane','s_juice','s_note','s_spitball','eg_mascot_lower','eg_recess_champ'],
+            student: ['s_basic','s_basic','s_nerd','s_skater','s_skater','s_rowdy','s_rowdy','eg_early_runner','eg_recess_sprinter','s_plane','s_juice','s_note','s_spitball','eg_mascot_lower','eg_senior_rebellion'],
             teacher: ['t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','t_trainee','eg_chalk_cleaner','eg_eraser_clapper','t_gradebook','s_coffee','t_quiz_s','eg_cloudmaster']
         };
 
@@ -575,6 +591,32 @@
             float.style.top = `${rect.top}px`;
             document.body.appendChild(float);
             setTimeout(() => float.remove(), 800);
+        }
+
+        function openAdminPrompt() {
+            let pass = prompt("Enter Admin Code:");
+            if (pass === "676713") {
+                document.getElementById('admin-modal').classList.remove('hidden');
+            } else if (pass !== null) {
+                alert("Incorrect Admin Code!");
+            }
+        }
+
+        function closeAdmin() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function addAdminRulers() {
+            playerProfile.rulers += 1000;
+            updateRulersDisplay();
+            alert("Added 1000 Golden Rulers!");
+        }
+
+        function addAdminAllCards() {
+            CARD_CATALOG.forEach(c => {
+                playerProfile.collection[c.id] = 4;
+            });
+            alert("All cards unlocked (4x copies)!");
         }
 
         function inspectCard(card) {
@@ -694,7 +736,7 @@
             } else if (type === 'standard') {
                 alert("📦 Standard Pack (50 📏):\n- Card 1 & 2: 100% Uncommon\n- Card 3: 100% Rare\n- Card 4: 53% Rare, 35% Super Rare, 12% Legendary");
             } else {
-                alert("🌲 Evergreen Pack (100 📏):\n- Contains 5 Cards!\n- Exclusively draws from the New Expansion set!\n- Guaranteed 1 Rare, 1 Super Rare, and higher Legendary odds!");
+                alert("🌲 Evergreen Pack (100 📏):\n- Contains 5 Cards!\n- Features legendary Senior Year Rebellion!\n- Guaranteed 1 Rare, 1 Super Rare, and higher Legendary odds!");
             }
         }
 
@@ -901,6 +943,18 @@
                     mEl.className = `minion rarity-${minion.rarity}`;
                     mEl.oncontextmenu = (e) => { e.preventDefault(); inspectCard(minion); };
 
+                    if (minion.stackedOnTop) {
+                        mEl.innerHTML += `<div style="position:absolute; bottom:2px; right:2px; font-size:9px; background:#e67e22; padding:2px; border-radius:3px;">Rider: ${minion.stackedOnTop.name}</div>`;
+                    }
+
+                    if (!isEnemy && selectedHandIndex !== null) {
+                        let selectedCard = player.hand[selectedHandIndex];
+                        if (minion.trait === 'mascotPiggyback' && selectedCard.faction === 'student' && selectedCard.type === 'minion') {
+                            mEl.classList.add('piggyback-target');
+                            mEl.onclick = () => stackOnMascot(lane);
+                        }
+                    }
+
                     if (isEnemy && selectedTrickIndex !== null) {
                         mEl.classList.add('targetable');
                         mEl.onclick = () => handleEnemyMinionClick(lane, mEl);
@@ -935,6 +989,34 @@
             const card = player.hand[index];
             if (card.cost > player.points) return log("<span style='color:#e74c3c;'>Not enough points!</span>");
 
+            if (card.id === 'eg_senior_rebellion') {
+                player.points -= card.cost;
+                log("<b>SENIOR YEAR REBELLION TRIGGERED!</b> All students gain +4/+4 and immediate bonus attack!");
+                player.field.forEach((m, idx) => {
+                    if (m) {
+                        m.att += 4;
+                        m.hp += 4;
+                        m.maxHp += 4;
+                        // Recess Rush damage regardless of teacher in lane
+                        enemy.hp = Math.max(0, enemy.hp - 2);
+                        showDamage(document.getElementById('enemy-banner'), 2);
+
+                        // Immediate bonus attack
+                        if (enemy.field[idx]) {
+                            enemy.field[idx].hp -= m.att;
+                            if (enemy.field[idx].hp <= 0) enemy.field[idx] = null;
+                        } else {
+                            enemy.hp = Math.max(0, enemy.hp - m.att);
+                            showDamage(document.getElementById('enemy-banner'), m.att);
+                        }
+                    }
+                });
+                player.hand.splice(index, 1);
+                checkGameOver();
+                updateUI();
+                return;
+            }
+
             if (card.trait === 'piggyback') {
                 if (!player.field.some(m => m !== null)) return log("<span style='color:#e74c3c;'>No friendly student to piggyback onto!</span>");
                 selectedPiggybackIndex = index;
@@ -947,7 +1029,7 @@
             if (card.type === 'minion') {
                 selectedHandIndex = index;
                 selectedTrickIndex = null;
-                log(`Selected <b>${card.name}</b>. Click a lane slot to place.`);
+                log(`Selected <b>${card.name}</b>. Click a lane slot or Mascot card.`);
                 updateUI();
             } else if (card.type === 'trick') {
                 selectedHandIndex = null;
@@ -975,6 +1057,23 @@
                     player.hand.splice(index, 1);
                 }
             }
+            updateUI();
+        }
+
+        function stackOnMascot(laneIndex) {
+            if (selectedHandIndex === null) return;
+            const topCard = player.hand[selectedHandIndex];
+            const baseMascot = player.field[laneIndex];
+
+            player.points -= topCard.cost;
+            baseMascot.att += topCard.att;
+            baseMascot.hp += topCard.hp;
+            baseMascot.maxHp += topCard.hp;
+            baseMascot.stackedOnTop = topCard;
+
+            log(`Stacked <b>${topCard.name}</b> onto Mascot! (+${topCard.att}/+${topCard.hp})`);
+            player.hand.splice(selectedHandIndex, 1);
+            selectedHandIndex = null;
             updateUI();
         }
 
@@ -1064,7 +1163,7 @@
 
             if (minionItems.length > 0 && emptyLanes.length > 0) {
                 let best = minionItems[0];
-                let chosenLane = emptyLanes[0];
+                let chosenLane = emptyLanes[Math.floor(Math.random() * emptyLanes.length)];
 
                 enemy.points -= best.card.cost;
                 let newMinion = { ...best.card, hp: best.card.hp, maxHp: best.card.maxHp || best.card.hp };
