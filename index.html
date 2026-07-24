@@ -153,6 +153,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.4);
             border: 3px solid var(--rarity-common);
             flex-shrink: 0;
+            cursor: pointer;
         }
 
         .card:hover {
@@ -323,10 +324,10 @@
             <button class="btn btn-teacher" onclick="switchDeckSide('teacher')">Teacher Deck</button>
         </div>
         <div>
-            <h3><span id="deck-side-title">Student</span> Deck (<span id="deck-card-count">0</span>/15 Cards)</h3>
+            <h3><span id="deck-side-title">Student</span> Deck (<span id="deck-card-count">0</span>/15 Cards) — <i>Click to remove card</i></h3>
             <div class="card-grid" id="active-deck-grid"></div>
         </div>
-        <h3 style="margin-top: 15px;">Your Collection (Click to add)</h3>
+        <h3 style="margin-top: 15px;">Your Collection — <i>Click to add card</i></h3>
         <div class="card-grid" id="collection-grid"></div>
     </div>
 
@@ -393,7 +394,7 @@
         const MAX_HAND_SIZE = 10;
         const DECK_SIZE = 15;
 
-        // Combined Master Catalog (Corrected Hall Monitor & Gym Coach to Teacher faction)
+        // Combined Master Catalog
         const CARD_CATALOG = [
             // --- UNCOMMONS ---
             { id: 's_coffee', faction: 'teacher', name: 'Coffee Refill', cost: 2, type: 'trick', healTeacher: 3, rarity: 'uncommon', icon: '☕' },
@@ -437,12 +438,12 @@
             { id: 't_basic', faction: 'teacher', name: 'Basic Teacher', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '📏' }
         ];
 
-        // Global Player Data
+        // Global Player Data - starter collections set up properly for full 15 card decks
         let playerProfile = {
             rulers: 50,
             collection: {
-                's_basic': 4, 's_nerd': 4, 's_plane': 4, 's_juice': 4, 's_skater': 2, 's_note': 2,
-                't_basic': 4, 't_sub': 4, 't_hall': 4, 't_gym': 3, 's_coffee': 3, 't_trainee': 2
+                's_basic': 4, 's_nerd': 2, 's_plane': 2, 's_juice': 2, 's_skater': 2, 's_note': 2, 's_spitball': 1,
+                't_basic': 4, 't_sub': 2, 't_hall': 2, 't_gym': 2, 's_coffee': 2, 't_trainee': 2, 't_quiz_s': 1
             },
             studentDeck: ['s_basic','s_basic','s_basic','s_basic','s_nerd','s_nerd','s_plane','s_plane','s_juice','s_juice','s_skater','s_skater','s_note','s_note','s_spitball'],
             teacherDeck: ['t_basic','t_basic','t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','s_coffee','s_coffee','t_trainee','t_trainee','t_quiz_s']
@@ -523,10 +524,16 @@
             collectionGrid.innerHTML = '';
 
             CARD_CATALOG.filter(c => c.faction === editingDeckSide).forEach(card => {
-                const owned = playerProfile.collection[card.id] || 0;
-                if (owned > 0) {
+                const ownedTotal = playerProfile.collection[card.id] || 0;
+                if (ownedTotal > 0) {
+                    const inDeckCount = activeDeckList.filter(id => id === card.id).length;
+                    const availableInCollection = ownedTotal - inDeckCount;
+
                     const el = createCardElement(card, false);
-                    el.innerHTML += `<div class="card-count-badge">x${owned}</div>`;
+                    el.innerHTML += `<div class="card-count-badge">x${availableInCollection}</div>`;
+                    if (availableInCollection <= 0) {
+                        el.style.opacity = '0.4';
+                    }
                     el.onclick = () => addCardToDeck(card.id);
                     collectionGrid.appendChild(el);
                 }
@@ -536,18 +543,18 @@
         function addCardToDeck(cardId) {
             const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
             const countInDeck = activeDeckList.filter(id => id === cardId).length;
-            const owned = playerProfile.collection[cardId] || 0;
+            const ownedTotal = playerProfile.collection[cardId] || 0;
 
             if (activeDeckList.length >= DECK_SIZE) {
-                alert("Deck is full! Maximum 15 cards.");
+                alert("Deck is full! Remove a card first (Maximum 15 cards).");
                 return;
             }
             if (countInDeck >= 4) {
-                alert("Maximum 4 copies allowed per card.");
+                alert("Maximum 4 copies allowed per card in a deck.");
                 return;
             }
-            if (countInDeck >= owned) {
-                alert("You don't own any more copies of this card!");
+            if (countInDeck >= ownedTotal) {
+                alert("You don't have any more unused copies of this card!");
                 return;
             }
 
@@ -646,7 +653,7 @@
             let eDeckList = enemy.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
 
             if (pDeckList.length < DECK_SIZE) {
-                alert(`Your ${player.role} deck must have 15 cards!`);
+                alert(`Your ${player.role} deck must have 15 cards! Current count: ${pDeckList.length}`);
                 return;
             }
 
