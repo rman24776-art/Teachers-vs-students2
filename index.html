@@ -112,7 +112,7 @@
 
         .battlefield {
             background: #16a085;
-            min-height: 140px;
+            min-height: 160px;
             border-radius: 8px;
             padding: 10px;
             display: flex;
@@ -121,11 +121,7 @@
             justify-content: flex-start;
             border: 2px dashed #0e6251;
             position: relative;
-        }
-
-        .battlefield.drag-over {
-            border-color: #f1c40f;
-            background: #1abc9c;
+            overflow-x: auto;
         }
 
         .battlefield-title {
@@ -134,6 +130,34 @@
             color: #a3e4d7;
             margin-bottom: 4px;
             font-weight: bold;
+        }
+
+        .lane-slot {
+            width: 110px;
+            height: 150px;
+            border: 2px dashed #a3e4d7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #a3e4d7;
+            cursor: pointer;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.1);
+            text-align: center;
+            flex-shrink: 0;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .lane-slot.selectable {
+            border-color: #f1c40f;
+            color: #f1c40f;
+            animation: pulseYellow 0.8s infinite alternate;
+        }
+
+        .lane-slot:hover {
+            background: rgba(241, 196, 15, 0.2);
         }
 
         .card, .minion {
@@ -155,13 +179,6 @@
             border: 3px solid var(--rarity-common);
             flex-shrink: 0;
             cursor: pointer;
-        }
-
-        .card[draggable="true"] {
-            cursor: grab;
-        }
-        .card[draggable="true"]:active {
-            cursor: grabbing;
         }
 
         .card:hover {
@@ -421,8 +438,8 @@
         </div>
 
         <div>
-            <div class="battlefield-title">Your Field (Drag & Drop or Click Cards Here)</div>
-            <div class="battlefield" id="player-field" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnField(event)"></div>
+            <div class="battlefield-title">Your Field (Click a hand card, then click a lane slot to place)</div>
+            <div class="battlefield" id="player-field"></div>
         </div>
 
         <div class="hero-banner" id="player-banner">
@@ -507,11 +524,11 @@
         let currentPhase = 'teacher';
         let selectedTrickIndex = null;
         let selectedPiggybackIndex = null;
+        let selectedHandIndex = null;
         let editingDeckSide = 'student';
-        let draggedHandIndex = null;
 
-        let player = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
-        let enemy = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
+        let player = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [null, null, null, null, null], deck: [] };
+        let enemy = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [null, null, null, null, null], deck: [] };
 
         function log(msg) {
             const logBox = document.getElementById('log');
@@ -743,8 +760,8 @@
                 return { ...item, hp: item.hp || 1, maxHp: item.hp || 1, uid: Math.random() };
             }).sort(() => Math.random() - 0.5);
 
-            player.hp = 20; player.points = 1; player.maxPoints = 1; player.hand = []; player.field = [];
-            enemy.hp = 20; enemy.points = 1; enemy.maxPoints = 1; enemy.hand = []; enemy.field = [];
+            player.hp = 20; player.points = 1; player.maxPoints = 1; player.hand = []; player.field = [null, null, null, null, null];
+            enemy.hp = 20; enemy.points = 1; enemy.maxPoints = 1; enemy.hand = []; enemy.field = [null, null, null, null, null];
 
             showScreen('game-board');
 
@@ -775,7 +792,7 @@
             [player, enemy].forEach(char => {
                 if (char.role === 'teacher') {
                     char.field.forEach(minion => {
-                        if (minion.trait === 'shapeshifter') transformTeacher(minion, true);
+                        if (minion && minion.trait === 'shapeshifter') transformTeacher(minion, true);
                     });
                 }
             });
@@ -812,6 +829,7 @@
 
         function nextPhase() {
             if (!isPlayerActiveTurn()) return;
+            selectedHandIndex = null;
             selectedTrickIndex = null;
             selectedPiggybackIndex = null;
 
@@ -848,11 +866,11 @@
             handEl.innerHTML = '';
             player.hand.forEach((card, index) => {
                 const cardEl = createCardElement(card, true);
-                
-                cardEl.setAttribute('draggable', 'true');
-                cardEl.ondragstart = (e) => handleDragStart(e, index);
+                if (selectedHandIndex === index) {
+                    cardEl.style.transform = "translateY(-10px)";
+                    cardEl.style.borderColor = "#f1c40f";
+                }
                 cardEl.onclick = () => handleHandCardClick(index);
-                
                 handEl.appendChild(cardEl);
             });
 
@@ -860,58 +878,43 @@
             renderField('enemy-field', enemy.field, true);
         }
 
-        function handleDragStart(e, index) {
-            if (!isPlayerActiveTurn()) {
-                e.preventDefault();
-                return;
-            }
-            draggedHandIndex = index;
-            e.dataTransfer.setData('text/plain', index);
-        }
-
-        function handleDragOver(e) {
-            if (!isPlayerActiveTurn()) return;
-            e.preventDefault();
-            const bf = document.getElementById('player-field');
-            bf.classList.add('drag-over');
-        }
-
-        function handleDragLeave(e) {
-            const bf = document.getElementById('player-field');
-            bf.classList.remove('drag-over');
-        }
-
-        function handleDropOnField(e) {
-            e.preventDefault();
-            const bf = document.getElementById('player-field');
-            bf.classList.remove('drag-over');
-
-            if (draggedHandIndex !== null && isPlayerActiveTurn()) {
-                handleHandCardClick(draggedHandIndex);
-                draggedHandIndex = null;
-            }
-        }
-
         function renderField(elementId, fieldList, isEnemy) {
             const container = document.getElementById(elementId);
             container.innerHTML = '';
 
-            fieldList.forEach((minion, index) => {
-                const mEl = createCardElement(minion, false);
-                mEl.className = `minion rarity-${minion.rarity}`;
+            for (let lane = 0; lane < 5; lane++) {
+                const minion = fieldList[lane];
 
-                if (isEnemy && selectedTrickIndex !== null) {
-                    mEl.classList.add('targetable');
-                    mEl.onclick = () => handleEnemyMinionClick(index, mEl);
+                if (minion) {
+                    const mEl = createCardElement(minion, false);
+                    mEl.className = `minion rarity-${minion.rarity}`;
+
+                    if (isEnemy && selectedTrickIndex !== null) {
+                        mEl.classList.add('targetable');
+                        mEl.onclick = () => handleEnemyMinionClick(lane, mEl);
+                    }
+
+                    if (!isEnemy && selectedPiggybackIndex !== null) {
+                        mEl.classList.add('piggyback-target');
+                        mEl.onclick = () => applyPiggyback(lane);
+                    }
+
+                    container.appendChild(mEl);
+                } else {
+                    const slot = document.createElement('div');
+                    slot.className = 'lane-slot';
+                    
+                    if (!isEnemy && selectedHandIndex !== null) {
+                        slot.classList.add('selectable');
+                        slot.innerText = `Lane ${lane + 1}\n(Click to Place)`;
+                        slot.onclick = () => placeMinionInLane(lane);
+                    } else {
+                        slot.innerText = `Lane ${lane + 1}`;
+                    }
+
+                    container.appendChild(slot);
                 }
-
-                if (!isEnemy && selectedPiggybackIndex !== null) {
-                    mEl.classList.add('piggyback-target');
-                    mEl.onclick = () => applyPiggyback(index);
-                }
-
-                container.appendChild(mEl);
-            });
+            }
         }
 
         function handleHandCardClick(index) {
@@ -924,7 +927,7 @@
             }
 
             if (card.type === 'trick' && player.role === 'student') {
-                let hasLibrarian = enemy.field.some(m => m.trait === 'noPranks');
+                let hasLibrarian = enemy.field.some(m => m && m.trait === 'noPranks');
                 if (hasLibrarian) {
                     log("<span style='color:#e74c3c;'>No Pranks active! Tricks blocked.</span>");
                     return;
@@ -932,38 +935,30 @@
             }
 
             if (card.trait === 'piggyback') {
-                if (player.field.length === 0) {
+                let hasMinion = player.field.some(m => m !== null);
+                if (!hasMinion) {
                     log("<span style='color:#e74c3c;'>No friendly student to piggyback onto!</span>");
                     return;
                 }
                 selectedPiggybackIndex = index;
+                selectedHandIndex = null;
+                selectedTrickIndex = null;
                 log("Select a friendly student to piggyback onto!");
                 updateUI();
                 return;
             }
 
             if (card.type === 'minion') {
-                player.points -= card.cost;
-                let newMinion = { ...card, hp: card.hp, maxHp: card.maxHp || card.hp };
-                
-                if (newMinion.trait === 'onTheMove') {
-                    transformTeacher(newMinion, false);
-                }
-
-                player.field.push(newMinion);
-                player.hand.splice(index, 1);
-                log(`You summoned <b>${newMinion.name}</b>.`);
-
-                if (newMinion.trait === 'inseparable') {
-                    triggerInseparable(player, newMinion);
-                }
-
+                selectedHandIndex = index;
                 selectedTrickIndex = null;
                 selectedPiggybackIndex = null;
+                log(`Selected <b>${card.name}</b>. Click an empty lane slot to place it.`);
+                updateUI();
             } else if (card.type === 'trick') {
+                selectedHandIndex = null;
                 if (card.damage) {
-                    if (enemy.field.length === 0) {
-                        // Directly hit hero if no minions
+                    let hasEnemyMinions = enemy.field.some(m => m !== null);
+                    if (!hasEnemyMinions) {
                         player.points -= card.cost;
                         enemy.hp = Math.max(0, enemy.hp - card.damage);
                         showDamage(document.getElementById('enemy-banner'), card.damage);
@@ -993,8 +988,36 @@
             updateUI();
         }
 
+        function placeMinionInLane(laneIndex) {
+            if (selectedHandIndex === null) return;
+
+            const card = player.hand[selectedHandIndex];
+            player.points -= card.cost;
+
+            let newMinion = { ...card, hp: card.hp, maxHp: card.maxHp || card.hp };
+
+            if (newMinion.trait === 'onTheMove') {
+                transformTeacher(newMinion, false);
+            }
+
+            player.field[laneIndex] = newMinion;
+            player.hand.splice(selectedHandIndex, 1);
+            
+            log(`You summoned <b>${newMinion.name}</b> in Lane ${laneIndex + 1}.`);
+
+            if (newMinion.trait === 'inseparable') {
+                triggerInseparable(player, newMinion);
+            }
+
+            selectedHandIndex = null;
+            selectedTrickIndex = null;
+            selectedPiggybackIndex = null;
+
+            updateUI();
+        }
+
         function triggerInseparable(char, newMinion) {
-            let inseparables = char.field.filter(m => m.trait === 'inseparable');
+            let inseparables = char.field.filter(m => m && m.trait === 'inseparable');
             if (inseparables.length > 1) {
                 inseparables.forEach(m => {
                     m.att += 2;
@@ -1005,19 +1028,21 @@
             }
 
             char.field.forEach(m => {
-                if (m.trait === 'rebellion') {
-                    char.field.forEach(unit => { unit.att += 1; unit.hp += 1; unit.maxHp += 1; });
+                if (m && m.trait === 'rebellion') {
+                    char.field.forEach(unit => { 
+                        if (unit) { unit.att += 1; unit.hp += 1; unit.maxHp += 1; }
+                    });
                     log("<b>Rebellion Leader</b> granted +1/+1 to all students!");
                 }
             });
         }
 
-        function applyPiggyback(targetIndex) {
+        function applyPiggyback(targetLane) {
             if (selectedPiggybackIndex === null) return;
             const card = player.hand[selectedPiggybackIndex];
 
             player.points -= card.cost;
-            const target = player.field[targetIndex];
+            const target = player.field[targetLane];
             target.att += 2;
             target.hp += 2;
             target.maxHp += 2;
@@ -1028,11 +1053,11 @@
             updateUI();
         }
 
-        function handleEnemyMinionClick(targetIndex, element) {
+        function handleEnemyMinionClick(targetLane, element) {
             if (selectedTrickIndex !== null && isPlayerActiveTurn()) {
                 const card = player.hand[selectedTrickIndex];
                 player.points -= card.cost;
-                const target = enemy.field[targetIndex];
+                const target = enemy.field[targetLane];
                 
                 target.hp -= card.damage;
                 showDamage(element, card.damage);
@@ -1044,7 +1069,7 @@
                 }
 
                 if (target.hp <= 0) {
-                    enemy.field.splice(targetIndex, 1);
+                    enemy.field[targetLane] = null;
                 }
 
                 player.hand.splice(selectedTrickIndex, 1);
@@ -1065,17 +1090,21 @@
                 if (playable.length === 0) break;
 
                 let minionItems = playable.filter(i => i.card.type === 'minion');
-                if (minionItems.length > 0) {
+                let emptyLanes = enemy.field.map((m, idx) => m === null ? idx : null).filter(idx => idx !== null);
+
+                if (minionItems.length > 0 && emptyLanes.length > 0) {
                     minionItems.sort((a,b) => (b.card.att + b.card.hp) - (a.card.att + a.card.hp));
                     let best = minionItems[0];
+                    let chosenLane = emptyLanes[Math.floor(Math.random() * emptyLanes.length)];
+
                     enemy.points -= best.card.cost;
 
                     let newMinion = { ...best.card, hp: best.card.hp, maxHp: best.card.maxHp || best.card.hp };
                     if (newMinion.trait === 'onTheMove') transformTeacher(newMinion, false);
 
-                    enemy.field.push(newMinion);
+                    enemy.field[chosenLane] = newMinion;
                     enemy.hand.splice(best.idx, 1);
-                    log(`CPU summoned <b>${newMinion.name}</b>.`);
+                    log(`CPU summoned <b>${newMinion.name}</b> in Lane ${chosenLane + 1}.`);
 
                     if (newMinion.trait === 'inseparable') triggerInseparable(enemy, newMinion);
                     played = true;
@@ -1090,9 +1119,7 @@
         }
 
         async function runFightPhase() {
-            let maxLanes = Math.max(player.field.length, enemy.field.length);
-
-            for (let i = 0; i < maxLanes; i++) {
+            for (let i = 0; i < 5; i++) {
                 let pMinion = player.field[i];
                 let eMinion = enemy.field[i];
 
@@ -1115,14 +1142,15 @@
                     log(`Lane ${i+1}: Enemy ${eMinion.name} hit You for ${eMinion.att} DMG!`);
                 }
 
+                // Clean up defeated minions in lane
+                if (player.field[i] && player.field[i].hp <= 0) player.field[i] = null;
+                if (enemy.field[i] && enemy.field[i].hp <= 0) enemy.field[i] = null;
+
                 updateUI();
                 await new Promise(r => setTimeout(r, 800));
                 checkGameOver();
             }
 
-            // Minions retain persistent damage; only clear if HP reaches 0 or below
-            player.field = player.field.filter(m => m.hp > 0);
-            enemy.field = enemy.field.filter(m => m.hp > 0);
             updateUI();
 
             setTimeout(() => {
