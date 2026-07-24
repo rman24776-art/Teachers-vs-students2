@@ -227,6 +227,12 @@
             animation: pulse 1s infinite alternate;
         }
 
+        .minion.piggyback-target {
+            border-color: #f1c40f;
+            cursor: pointer;
+            animation: pulseYellow 1s infinite alternate;
+        }
+
         /* Hand Layout */
         .hand-container {
             background: #34495e;
@@ -256,6 +262,10 @@
         @keyframes pulse {
             0% { box-shadow: 0 0 4px #e74c3c; }
             100% { box-shadow: 0 0 12px #e74c3c; }
+        }
+        @keyframes pulseYellow {
+            0% { box-shadow: 0 0 4px #f1c40f; }
+            100% { box-shadow: 0 0 12px #f1c40f; }
         }
 
         .dmg-float {
@@ -322,14 +332,20 @@
 
     <div id="shop-screen" class="screen-container hidden">
         <h2>Card Shop</h2>
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
-            <div style="background: #34495e; padding: 15px; border-radius: 8px; text-align: center; width: 220px;">
-                <h3>Standard Pack</h3>
-                <div style="font-size: 40px; margin: 10px 0;">📦</div>
-                <p style="font-size: 12px;">Contains guaranteed Uncommons and Rares with a chance for Super Rares and Legendaries!</p>
-                <button class="btn btn-shop" onclick="buyPack()">Buy Pack (50 📏)</button>
+        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+            <div style="background: #34495e; padding: 15px; border-radius: 8px; text-align: center; width: 200px;">
+                <h3>Mini Pack</h3>
+                <div style="font-size: 36px; margin: 8px 0;">📫</div>
+                <p style="font-size: 11px;">Contains guaranteed 1 Uncommon and 1 Rare card!</p>
+                <button class="btn btn-shop" onclick="buyPack('mini')">Buy Mini Pack (25 📏)</button>
             </div>
-            <div style="flex-grow: 1;">
+            <div style="background: #34495e; padding: 15px; border-radius: 8px; text-align: center; width: 200px;">
+                <h3>Standard Pack</h3>
+                <div style="font-size: 36px; margin: 8px 0;">📦</div>
+                <p style="font-size: 11px;">Guaranteed 2 Uncommons, 1 Rare + chance for Super Rare & Legendary!</p>
+                <button class="btn btn-shop" onclick="buyPack('standard')">Buy Pack (50 📏)</button>
+            </div>
+            <div style="flex-grow: 1; min-width: 250px;">
                 <h3>Pack Openings</h3>
                 <div class="card-grid" id="pack-results" style="min-height: 180px;">
                     <div style="grid-column: 1/-1; text-align: center; color: #7f8c8d; padding-top: 50px;">Open a pack to reveal cards!</div>
@@ -377,54 +393,66 @@
         const MAX_HAND_SIZE = 10;
         const DECK_SIZE = 15;
 
-        // Master Card Catalog
+        // Combined Master Catalog (Corrected Hall Monitor & Gym Coach to Teacher faction)
         const CARD_CATALOG = [
-            // Basic & Uncommon Students
-            { id: 's1', faction: 'student', name: 'Basic Student', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '🎒' },
-            { id: 's2', faction: 'student', name: 'Nerd', att: 0, hp: 1, cost: 0, type: 'minion', rarity: 'common', icon: '🤓' },
-            { id: 's3', faction: 'student', name: 'Bully', att: 2, hp: 3, cost: 3, type: 'minion', rarity: 'rare', icon: '🥊' },
-            { id: 's4', faction: 'student', name: 'Hall Monitor', att: 2, hp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🚨' },
-            { id: 's5', faction: 'student', name: 'Gym Coach', att: 3, hp: 4, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏋️' },
-            { id: 's6', faction: 'student', name: 'Skater Kid', att: 3, hp: 1, cost: 2, type: 'minion', rarity: 'uncommon', icon: '🛹' },
-            { id: 's7', faction: 'student', name: 'Paper Airplane', cost: 1, type: 'trick', damageHero: 2, rarity: 'uncommon', icon: '✈️' },
-            { id: 's8', faction: 'student', name: 'Juice Box', cost: 2, type: 'trick', healStudent: 3, rarity: 'uncommon', icon: '🧃' },
-            { id: 's9', faction: 'student', name: 'Note Passer', cost: 2, type: 'trick', draw: 1, rarity: 'uncommon', icon: '📝' },
-            
-            // Rare, Super Rare, Legendary Students
-            { id: 's10', faction: 'student', name: 'Trombone Player', att: 3, hp: 4, cost: 4, type: 'minion', rarity: 'rare', icon: '🎺', onPlay: 'debuffLaneTeachers' },
-            { id: 's11', faction: 'student', name: 'Senior Prank', cost: 5, type: 'trick', rarity: 'super-rare', icon: '🃏', effect: 'swapTeacherStats' },
-            { id: 's12', faction: 'student', name: 'Last Day of School', cost: 7, type: 'trick', rarity: 'legendary', icon: '🔔', effect: 'bonusAttack' },
+            // --- UNCOMMONS ---
+            { id: 's_coffee', faction: 'teacher', name: 'Coffee Refill', cost: 2, type: 'trick', healTeacher: 3, rarity: 'uncommon', icon: '☕' },
+            { id: 't_sub', faction: 'teacher', name: 'Substitute Teacher', att: 1, hp: 3, cost: 1, type: 'minion', rarity: 'uncommon', icon: '📋' },
+            { id: 't_hall', faction: 'teacher', name: 'Hall Monitor', att: 2, hp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🚨' },
+            { id: 't_gym', faction: 'teacher', name: 'Gym Coach', att: 3, hp: 4, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏋️' },
+            { id: 's_plane', faction: 'student', name: 'Paper Airplane', cost: 1, type: 'trick', damageHero: 2, rarity: 'uncommon', icon: '✈️' },
+            { id: 's_juice', faction: 'student', name: 'Juice Box', cost: 2, type: 'trick', healStudent: 3, rarity: 'uncommon', icon: '🧃' },
+            { id: 's_skater', faction: 'student', name: 'Skater Kid', att: 3, hp: 1, cost: 2, type: 'minion', rarity: 'uncommon', icon: '🛹' },
+            { id: 's_note', faction: 'student', name: 'Note Passer', cost: 2, type: 'trick', draw: 1, rarity: 'uncommon', icon: '📝' },
+            { id: 't_trainee', faction: 'teacher', name: 'Hall Monitor Trainee', att: 1, hp: 2, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🔍', trait: 'onTheMove' },
+            { id: 't_quiz_s', faction: 'teacher', name: 'Pop Quiz Surprise', cost: 2, type: 'trick', damage: 2, rarity: 'uncommon', icon: '⚡' },
+            { id: 's_rowdy', faction: 'student', name: 'Rowdy Freshman', att: 2, hp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '💥', trait: 'inseparable' },
+            { id: 's_spitball', faction: 'student', name: 'Spitball Cannon', cost: 1, type: 'trick', damage: 1, rarity: 'uncommon', icon: '💦' },
 
-            // Basic & Uncommon Teachers
-            { id: 't1', faction: 'teacher', name: 'Basic Teacher', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '📏' },
-            { id: 't2', faction: 'teacher', name: 'Ruler Toss', cost: 2, type: 'trick', damage: 2, rarity: 'rare', icon: '🎯' },
-            { id: 't3', faction: 'teacher', name: 'Tanky Teacher', att: 2, hp: 3, cost: 3, type: 'minion', rarity: 'epic', icon: '🛡️' },
-            { id: 't4', faction: 'teacher', name: 'Substitute Teacher', att: 1, hp: 3, cost: 1, type: 'minion', rarity: 'uncommon', icon: '📋' },
-            { id: 't5', faction: 'teacher', name: 'Coffee Refill', cost: 2, type: 'trick', healTeacher: 3, rarity: 'uncommon', icon: '☕' },
+            // --- RARES ---
+            { id: 't_snooze', faction: 'teacher', name: 'Snooze Button', cost: 2, type: 'trick', rarity: 'rare', icon: '⏰', effect: 'snooze' },
+            { id: 's_trombone', faction: 'student', name: 'Trombone Player', att: 3, hp: 4, cost: 4, type: 'minion', rarity: 'rare', icon: '🎺', effect: 'lowerTeacherAtt' },
+            { id: 't_proctor', faction: 'teacher', name: 'Strict Proctor', att: 1, hp: 4, cost: 2, type: 'minion', rarity: 'rare', icon: '🧐', effect: 'freezeStudent' },
+            { id: 't_redpen', faction: 'teacher', name: 'Red Pen', cost: 2, type: 'trick', rarity: 'rare', icon: '🖊️', effect: 'destroyWeakStudent' },
+            { id: 't_librarian', faction: 'teacher', name: 'Strict Librarian', att: 1, hp: 5, cost: 3, type: 'minion', rarity: 'rare', icon: '📚', trait: 'noPranks' },
+            { id: 't_gradebook', faction: 'teacher', name: 'Grade Book', cost: 2, type: 'trick', draw: 1, rarity: 'rare', icon: '📖' },
+            { id: 's_backpack', faction: 'student', name: 'Stacked Backpack Kid', att: 2, hp: 3, cost: 3, type: 'minion', rarity: 'rare', icon: '🎒', trait: 'piggyback' },
+            { id: 's_twins', faction: 'student', name: 'Twin Pranksters', att: 2, hp: 3, cost: 3, type: 'minion', rarity: 'rare', icon: '👯', trait: 'inseparable' },
 
-            // Rare, Super Rare, Legendary Teachers
-            { id: 't6', faction: 'teacher', name: 'Snooze Button', cost: 2, type: 'trick', rarity: 'rare', icon: '⏰', effect: 'freezeTeacher' },
-            { id: 't7', faction: 'teacher', name: 'Strict Proctor', att: 1, hp: 4, cost: 2, type: 'minion', rarity: 'rare', icon: '🧐', onPlay: 'freezeLaneStudent' },
-            { id: 't8', faction: 'teacher', name: 'Red Pen', cost: 2, type: 'trick', rarity: 'rare', icon: '🖊️', effect: 'destroyLowHpStudent' },
-            { id: 't9', faction: 'teacher', name: 'Curfew Lockdown', cost: 4, type: 'trick', rarity: 'super-rare', icon: '🔒', effect: 'lockTricks' },
-            { id: 't10', faction: 'teacher', name: 'The Principal', att: 6, hp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '👔', onPlay: 'expelStrongest', passive: 'buffOnStudentDeath' }
+            // --- SUPER RARES ---
+            { id: 't_curfew', faction: 'teacher', name: 'Curfew Lockdown', cost: 4, type: 'trick', rarity: 'super-rare', icon: '🔒', effect: 'lockTricks' },
+            { id: 's_prank', faction: 'student', name: 'Senior Prank', cost: 5, type: 'trick', rarity: 'super-rare', icon: '🃏', effect: 'swapTeacherStats' },
+            { id: 's_rebellion', faction: 'student', name: 'Rebellion Leader', att: 4, hp: 5, cost: 5, type: 'minion', rarity: 'super-rare', icon: '🚩', trait: 'rebellion' },
+            { id: 't_quiz_m', faction: 'teacher', name: 'Pop Quiz Master', att: 3, hp: 6, cost: 4, type: 'minion', rarity: 'super-rare', icon: '💯', trait: 'onDamagedDiscard' },
+
+            // --- LEGENDARIES ---
+            { id: 's_lastday', faction: 'student', name: 'Last Day of School', cost: 7, type: 'trick', rarity: 'legendary', icon: '🔔', effect: 'bonusAttack' },
+            { id: 't_principal', faction: 'teacher', name: 'The Principal', att: 6, hp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '👔', effect: 'expelStrongest' },
+            { id: 't_shapeshifter', faction: 'teacher', name: 'Shapeshifting Sub', att: 2, hp: 5, cost: 5, type: 'minion', rarity: 'legendary', icon: '🎭', trait: 'shapeshifter' },
+            { id: 's_doubletrouble', faction: 'student', name: 'The Double Troubles', att: 6, hp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '👯‍♂️', trait: 'inseparable' },
+
+            // --- COMMONS ---
+            { id: 's_basic', faction: 'student', name: 'Basic Student', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '🎒' },
+            { id: 's_nerd', faction: 'student', name: 'Nerd', att: 0, hp: 1, cost: 0, type: 'minion', rarity: 'common', icon: '🤓' },
+            { id: 't_basic', faction: 'teacher', name: 'Basic Teacher', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '📏' }
         ];
 
         // Global Player Data
         let playerProfile = {
             rulers: 50,
             collection: {
-                's1': 4, 's2': 4, 's3': 4, 's4': 2, 's5': 1,
-                't1': 4, 't2': 4, 't3': 4, 't4': 2, 't5': 1
+                's_basic': 4, 's_nerd': 4, 's_plane': 4, 's_juice': 4, 's_skater': 2, 's_note': 2,
+                't_basic': 4, 't_sub': 4, 't_hall': 4, 't_gym': 3, 's_coffee': 3, 't_trainee': 2
             },
-            studentDeck: ['s1','s1','s1','s1','s2','s2','s2','s2','s3','s3','s3','s3','s4','s4','s5'],
-            teacherDeck: ['t1','t1','t1','t1','t2','t2','t2','t2','t3','t3','t3','t3','t4','t4','t5']
+            studentDeck: ['s_basic','s_basic','s_basic','s_basic','s_nerd','s_nerd','s_plane','s_plane','s_juice','s_juice','s_skater','s_skater','s_note','s_note','s_spitball'],
+            teacherDeck: ['t_basic','t_basic','t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','s_coffee','s_coffee','t_trainee','t_trainee','t_quiz_s']
         };
 
         // Battle State
         let round = 1;
         let currentPhase = 'teacher';
         let selectedTrickIndex = null;
+        let selectedPiggybackIndex = null;
         let editingDeckSide = 'student';
 
         let player = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
@@ -478,16 +506,17 @@
             const activeDeckGrid = document.getElementById('active-deck-grid');
             activeDeckGrid.innerHTML = '';
 
-            // Group deck cards
             let deckCounts = {};
             activeDeckList.forEach(id => deckCounts[id] = (deckCounts[id] || 0) + 1);
 
             Object.keys(deckCounts).forEach(cardId => {
                 const card = CARD_CATALOG.find(c => c.id === cardId);
-                const el = createCardElement(card, false);
-                el.innerHTML += `<div class="card-count-badge">x${deckCounts[cardId]}</div>`;
-                el.onclick = () => removeCardFromDeck(cardId);
-                activeDeckGrid.appendChild(el);
+                if (card) {
+                    const el = createCardElement(card, false);
+                    el.innerHTML += `<div class="card-count-badge">x${deckCounts[cardId]}</div>`;
+                    el.onclick = () => removeCardFromDeck(cardId);
+                    activeDeckGrid.appendChild(el);
+                }
             });
 
             const collectionGrid = document.getElementById('collection-grid');
@@ -514,7 +543,7 @@
                 return;
             }
             if (countInDeck >= 4) {
-                alert("You can only have up to 4 copies of a card in your deck.");
+                alert("Maximum 4 copies allowed per card.");
                 return;
             }
             if (countInDeck >= owned) {
@@ -535,14 +564,15 @@
             }
         }
 
-        // --- SHOP & PACK OPENING ---
-        function buyPack() {
-            if (playerProfile.rulers < 50) {
+        // --- SHOP & PACK OPENINGS ---
+        function buyPack(type) {
+            const cost = (type === 'mini') ? 25 : 50;
+            if (playerProfile.rulers < cost) {
                 alert("Not enough Golden Rulers!");
                 return;
             }
 
-            playerProfile.rulers -= 50;
+            playerProfile.rulers -= cost;
             updateRulersDisplay();
 
             const packResultsGrid = document.getElementById('pack-results');
@@ -554,24 +584,21 @@
             const superRares = CARD_CATALOG.filter(c => c.rarity === 'super-rare');
             const legendaries = CARD_CATALOG.filter(c => c.rarity === 'legendary');
 
-            // Guaranteed: 2 Uncommons, 1 Rare
-            pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
-            pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
-            pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
-
-            // Bonus Roll
-            const rand = Math.random();
-            if (rand < 0.05) {
-                pulledCards.push(legendaries[Math.floor(Math.random() * legendaries.length)]);
-            } else if (rand < 0.20) {
-                pulledCards.push(superRares[Math.floor(Math.random() * superRares.length)]);
-            } else if (rand < 0.50) {
+            if (type === 'mini') {
+                pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
                 pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
             } else {
                 pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
+                pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
+                pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
+
+                const rand = Math.random();
+                if (rand < 0.08) pulledCards.push(legendaries[Math.floor(Math.random() * legendaries.length)]);
+                else if (rand < 0.25) pulledCards.push(superRares[Math.floor(Math.random() * superRares.length)]);
+                else if (rand < 0.55) pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
+                else pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
             }
 
-            // Process Pulled Cards & Recycle Duplicates past 4
             pulledCards.forEach(card => {
                 let currentCount = playerProfile.collection[card.id] || 0;
                 const cardEl = createCardElement(card, false);
@@ -604,13 +631,13 @@
             if(card.type === 'minion') {
                 body += `<div class="card-stats"><span class="stat-box stat-att">${card.att}</span><span class="stat-box stat-hp">${card.hp}</span></div>`;
             } else {
-                body += `<div style="font-size:9px; text-align:center;">${card.type.toUpperCase()}</div>`;
+                body += `<div style="font-size:9px; text-align:center;">TRICK</div>`;
             }
             cardEl.innerHTML = body;
             return cardEl;
         }
 
-        // --- BATTLE SYSTEM ---
+        // --- GAME PLAY MECHANICS ---
         function startGame(role) {
             player.role = role;
             enemy.role = (role === 'student') ? 'teacher' : 'student';
@@ -619,16 +646,12 @@
             let eDeckList = enemy.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
 
             if (pDeckList.length < DECK_SIZE) {
-                alert(`Your ${player.role} deck must have exactly 15 cards! Go to Decks to build it.`);
+                alert(`Your ${player.role} deck must have 15 cards!`);
                 return;
             }
 
-            player.deck = pDeckList.map(id => ({ ...CARD_CATALOG.find(c => c.id === id), uid: Math.random() }));
-            enemy.deck = eDeckList.map(id => ({ ...CARD_CATALOG.find(c => c.id === id), uid: Math.random() }));
-
-            // Shuffle decks
-            player.deck.sort(() => Math.random() - 0.5);
-            enemy.deck.sort(() => Math.random() - 0.5);
+            player.deck = pDeckList.map(id => ({ ...CARD_CATALOG.find(c => c.id === id), uid: Math.random() })).sort(() => Math.random() - 0.5);
+            enemy.deck = eDeckList.map(id => ({ ...CARD_CATALOG.find(c => c.id === id), uid: Math.random() })).sort(() => Math.random() - 0.5);
 
             player.hp = 20; player.points = 1; player.maxPoints = 1; player.hand = []; player.field = [];
             enemy.hp = 20; enemy.points = 1; enemy.maxPoints = 1; enemy.hand = []; enemy.field = [];
@@ -658,6 +681,15 @@
             currentPhase = phase;
             const banner = document.getElementById('phase-banner');
             const passBtn = document.getElementById('end-turn-btn');
+
+            // Trigger Shapeshifting Sub
+            [player, enemy].forEach(char => {
+                if (char.role === 'teacher') {
+                    char.field.forEach(minion => {
+                        if (minion.trait === 'shapeshifter') transformTeacher(minion, true);
+                    });
+                }
+            });
 
             if (phase === 'teacher') {
                 banner.innerText = "Phase 1: Teachers Turn";
@@ -692,9 +724,24 @@
         function nextPhase() {
             if (!isPlayerActiveTurn()) return;
             selectedTrickIndex = null;
+            selectedPiggybackIndex = null;
 
             if (currentPhase === 'teacher') startPhase('student');
             else if (currentPhase === 'student') startPhase('fight');
+        }
+
+        function transformTeacher(minion, bonusStats = false) {
+            const teachers = CARD_CATALOG.filter(c => c.faction === 'teacher' && c.type === 'minion');
+            const newCard = teachers[Math.floor(Math.random() * teachers.length)];
+            let att = newCard.att + (bonusStats ? 2 : 0);
+            let hp = newCard.hp + (bonusStats ? 2 : 0);
+
+            minion.name = newCard.name;
+            minion.att = att;
+            minion.hp = hp;
+            minion.icon = newCard.icon;
+            minion.rarity = newCard.rarity;
+            log(`Teacher transformed into <b>${newCard.name}</b>!`);
         }
 
         function updateUI() {
@@ -707,7 +754,6 @@
             document.getElementById('enemy-points').innerText = `${eLabel}: ${enemy.points}/${enemy.maxPoints}`;
             document.getElementById('hand-count').innerText = player.hand.length;
 
-            // Render Hand
             const handEl = document.getElementById('player-hand');
             handEl.innerHTML = '';
             player.hand.forEach((card, index) => {
@@ -733,6 +779,11 @@
                     mEl.onclick = () => handleEnemyMinionClick(index, mEl);
                 }
 
+                if (!isEnemy && selectedPiggybackIndex !== null) {
+                    mEl.classList.add('piggyback-target');
+                    mEl.onclick = () => applyPiggyback(index);
+                }
+
                 container.appendChild(mEl);
             });
         }
@@ -746,31 +797,99 @@
                 return;
             }
 
+            // Check No Pranks lockout
+            if (card.type === 'trick' && player.role === 'student') {
+                let hasLibrarian = enemy.field.some(m => m.trait === 'noPranks');
+                if (hasLibrarian) {
+                    log("<span style='color:#e74c3c;'>No Pranks active! Tricks blocked.</span>");
+                    return;
+                }
+            }
+
+            if (card.trait === 'piggyback') {
+                if (player.field.length === 0) {
+                    log("<span style='color:#e74c3c;'>No friendly student to piggyback onto!</span>");
+                    return;
+                }
+                selectedPiggybackIndex = index;
+                log("Select a friendly student to piggyback onto!");
+                updateUI();
+                return;
+            }
+
             if (card.type === 'minion') {
                 player.points -= card.cost;
-                player.field.push({ ...card });
+                let newMinion = { ...card };
+                
+                // On the Move
+                if (newMinion.trait === 'onTheMove') {
+                    transformTeacher(newMinion, false);
+                }
+
+                player.field.push(newMinion);
                 player.hand.splice(index, 1);
+                log(`You summoned <b>${newMinion.name}</b>.`);
+
+                // Inseparable Logic
+                if (newMinion.trait === 'inseparable') {
+                    triggerInseparable(player, newMinion);
+                }
+
                 selectedTrickIndex = null;
-                log(`You summoned <b>${card.name}</b>.`);
+                selectedPiggybackIndex = null;
             } else if (card.type === 'trick') {
                 if (card.damage) {
                     selectedTrickIndex = index;
                     log("Select an enemy minion to cast trick.");
+                    updateUI();
                     return;
                 }
                 
-                // Direct Tricks Execution
                 player.points -= card.cost;
                 if (card.damageHero) {
                     enemy.hp = Math.max(0, enemy.hp - card.damageHero);
-                    log(`Used ${card.name}! Dealt ${card.damageHero} DMG to Enemy Hero.`);
+                    log(`Dealt ${card.damageHero} DMG to Enemy Hero.`);
                 }
                 if (card.draw) {
                     drawCard(player);
-                    log(`Used ${card.name}! Drew 1 card.`);
+                    log(`Drew 1 card.`);
                 }
                 player.hand.splice(index, 1);
             }
+            updateUI();
+        }
+
+        function triggerInseparable(char, newMinion) {
+            let inseparables = char.field.filter(m => m.trait === 'inseparable');
+            if (inseparables.length > 1) {
+                inseparables.forEach(m => {
+                    m.att += 2;
+                    m.hp += 2;
+                });
+                log("<b>Inseparable!</b> Students gained +2/+2!");
+            }
+
+            // Rebellion Leader synergy
+            char.field.forEach(m => {
+                if (m.trait === 'rebellion') {
+                    char.field.forEach(unit => { unit.att += 1; unit.hp += 1; });
+                    log("<b>Rebellion Leader</b> granted +1/+1 to all students!");
+                }
+            });
+        }
+
+        function applyPiggyback(targetIndex) {
+            if (selectedPiggybackIndex === null) return;
+            const card = player.hand[selectedPiggybackIndex];
+
+            player.points -= card.cost;
+            const target = player.field[targetIndex];
+            target.att += 2;
+            target.hp += 2;
+
+            log(`Piggybacked <b>${card.name}</b> onto ${target.name} (+2/+2)!`);
+            player.hand.splice(selectedPiggybackIndex, 1);
+            selectedPiggybackIndex = null;
             updateUI();
         }
 
@@ -782,9 +901,14 @@
                 
                 target.hp -= card.damage;
                 showDamage(element, card.damage);
-                log(`You used <b>${card.name}</b> on ${target.name} for ${card.damage} DMG.`);
+                log(`Used <b>${card.name}</b> on ${target.name} for ${card.damage} DMG.`);
 
-                // Correct Splice Target Fix Applied Here!
+                // Force Discard on Pop Quiz Master
+                if (target.trait === 'onDamagedDiscard' && player.hand.length > 0) {
+                    player.hand.pop();
+                    log("Pop Quiz Master forced you to discard a card!");
+                }
+
                 if (target.hp <= 0) {
                     enemy.field.splice(targetIndex, 1);
                 }
@@ -812,9 +936,15 @@
                     minionItems.sort((a,b) => (b.card.att + b.card.hp) - (a.card.att + a.card.hp));
                     let best = minionItems[0];
                     enemy.points -= best.card.cost;
-                    enemy.field.push({ ...best.card });
+
+                    let newMinion = { ...best.card };
+                    if (newMinion.trait === 'onTheMove') transformTeacher(newMinion, false);
+
+                    enemy.field.push(newMinion);
                     enemy.hand.splice(best.idx, 1);
-                    log(`CPU summoned <b>${best.card.name}</b>.`);
+                    log(`CPU summoned <b>${newMinion.name}</b>.`);
+
+                    if (newMinion.trait === 'inseparable') triggerInseparable(enemy, newMinion);
                     played = true;
                 }
             }
@@ -837,7 +967,13 @@
                 if (pMinion && eMinion) {
                     eMinion.hp -= pMinion.att;
                     pMinion.hp -= eMinion.att;
-                    log(`Lane ${i+1}: ${pMinion.name} and ${eMinion.name} fought each other!`);
+                    log(`Lane ${i+1}: ${pMinion.name} and ${eMinion.name} fought!`);
+
+                    // On Damaged Trait
+                    if (eMinion.trait === 'onDamagedDiscard' && player.hand.length > 0) {
+                        player.hand.pop();
+                        log("Pop Quiz Master forced you to discard a card!");
+                    }
                 } else if (pMinion && !eMinion) {
                     enemy.hp = Math.max(0, enemy.hp - pMinion.att);
                     showDamage(document.getElementById('enemy-banner'), pMinion.att);
