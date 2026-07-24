@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachers vs Students</title>
+    <style>
+        :root {
+            --bg-color: #1a1e29;
+            --card-student: #2980b9;
+            --card-teacher: #c0392b;
+            --rarity-common: #bdc3c7;
+            --rarity-uncommon: #2ecc71;
+            --rarity-rare: #3498db;
+            --rarity-super-rare: #9b59b6;
+            --rarity-legendary: #f1c40f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #ecf0f1;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        h1 { margin: 0 0 10px 0; }
+
+        .hidden { display: none !important; }
+
+        /* Navigation Header */
+        #top-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+            background: #2c3e50;
+            padding: 10px 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 950px;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+
+        .currency-display {
+            font-size: 16px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        /* Screens */
+        .screen-container {
+            width: 100%;
+            max-width: 950px;
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-main { background-color: #3498db; color: white; }
+        .btn-student { background-color: #2980b9; color: white; }
+        .btn-teacher { background-color: #c0392b; color: white; }
+        .btn-action { background-color: #2ecc71; color: white; }
+        .btn-shop { background-color: #f1c40f; color: #2c3e50; }
+
+        /* Board Layout */
+        #game-board {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .phase-indicator {
+            text-align: center;
+            background: #8e44ad;
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .hero-banner {
+            background: #34495e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .battlefield {
+            background: #16a085;
+            min-height: 140px;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-start;
+            border: 2px dashed #0e6251;
+            position: relative;
+        }
+
+        .battlefield-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #a3e4d7;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        /* Cards & Minions */
+        .card, .minion {
+            width: 110px;
+            height: 150px;
+            background: #34495e;
+            color: white;
+            border-radius: 8px;
+            padding: 8px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: bold;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            border: 3px solid var(--rarity-common);
+            flex-shrink: 0;
+        }
+
+        .card:hover {
+            transform: translateY(-6px) scale(1.03);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+            z-index: 10;
+        }
+
+        .rarity-common { border-color: var(--rarity-common); }
+        .rarity-uncommon { border-color: var(--rarity-uncommon); }
+        .rarity-rare { border-color: var(--rarity-rare); }
+        .rarity-super-rare { border-color: var(--rarity-super-rare); }
+        .rarity-legendary { border-color: var(--rarity-legendary); }
+
+        .card-cost {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #2980b9;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border: 2px solid #fff;
+        }
+
+        .card-count-badge {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            background: #e67e22;
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            border: 2px solid #fff;
+        }
+
+        .card-art {
+            height: 45px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+        }
+        .stat-box {
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+        }
+        .stat-att { background: #c0392b; }
+        .stat-hp { background: #27ae60; }
+
+        .minion.targetable {
+            border-color: #e74c3c;
+            cursor: pointer;
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* Hand Layout */
+        .hand-container {
+            background: #34495e;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        .hand {
+            display: flex;
+            gap: 10px;
+            min-height: 160px;
+            align-items: center;
+            overflow-x: auto;
+        }
+
+        /* Deck & Collection Grids */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #1a1e29;
+            border-radius: 8px;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 4px #e74c3c; }
+            100% { box-shadow: 0 0 12px #e74c3c; }
+        }
+
+        .dmg-float {
+            position: absolute;
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 22px;
+            animation: floatUp 0.8s forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-30px); }
+        }
+
+        #log {
+            background: #111;
+            color: #2ecc71;
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 5px;
+            height: 90px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Teachers vs Students</h1>
+
+    <div id="top-nav">
+        <div>
+            <button class="btn btn-main" onclick="showScreen('mode-screen')">Play</button>
+            <button class="btn btn-main" onclick="showScreen('deck-screen')">Decks</button>
+            <button class="btn btn-shop" onclick="showScreen('shop-screen')">Shop</button>
+        </div>
+        <div class="currency-display">
+            📏 Golden Rulers: <span id="rulers-count">50</span>
+        </div>
+    </div>
+
+    <div id="mode-screen" class="screen-container">
+        <h2>Select Match Side</h2>
+        <p>Pick a side to begin the battle!</p>
+        <button class="btn btn-student" onclick="startGame('student')">Play as Students</button>
+        <button class="btn btn-teacher" onclick="startGame('teacher')">Play as Teachers</button>
+    </div>
+
+    <div id="deck-screen" class="screen-container hidden">
+        <h2>Deck Builder</h2>
+        <div style="margin-bottom: 12px;">
+            <button class="btn btn-student" onclick="switchDeckSide('student')">Student Deck</button>
+            <button class="btn btn-teacher" onclick="switchDeckSide('teacher')">Teacher Deck</button>
+        </div>
+        <div>
+            <h3><span id="deck-side-title">Student</span> Deck (<span id="deck-card-count">0</span>/15 Cards)</h3>
+            <div class="card-grid" id="active-deck-grid"></div>
+        </div>
+        <h3 style="margin-top: 15px;">Your Collection (Click to add)</h3>
+        <div class="card-grid" id="collection-grid"></div>
+    </div>
+
+    <div id="shop-screen" class="screen-container hidden">
+        <h2>Card Shop</h2>
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+            <div style="background: #34495e; padding: 15px; border-radius: 8px; text-align: center; width: 220px;">
+                <h3>Standard Pack</h3>
+                <div style="font-size: 40px; margin: 10px 0;">📦</div>
+                <p style="font-size: 12px;">Contains guaranteed Uncommons and Rares with a chance for Super Rares and Legendaries!</p>
+                <button class="btn btn-shop" onclick="buyPack()">Buy Pack (50 📏)</button>
+            </div>
+            <div style="flex-grow: 1;">
+                <h3>Pack Openings</h3>
+                <div class="card-grid" id="pack-results" style="min-height: 180px;">
+                    <div style="grid-column: 1/-1; text-align: center; color: #7f8c8d; padding-top: 50px;">Open a pack to reveal cards!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-board" class="hidden">
+        <div class="phase-indicator" id="phase-banner">Teacher Turn</div>
+
+        <div class="hero-banner" id="enemy-banner">
+            <span id="enemy-name">CPU</span>
+            <span id="enemy-hp">HP: 20</span>
+            <span id="enemy-points">Points: 1/15</span>
+        </div>
+
+        <div>
+            <div class="battlefield-title">Enemy Field</div>
+            <div class="battlefield" id="enemy-field"></div>
+        </div>
+
+        <div>
+            <div class="battlefield-title">Your Field</div>
+            <div class="battlefield" id="player-field"></div>
+        </div>
+
+        <div class="hero-banner" id="player-banner">
+            <span id="player-name">Player</span>
+            <span id="player-hp">HP: 20</span>
+            <span id="player-points">Points: 1/15</span>
+            <button class="btn btn-action" id="end-turn-btn" onclick="nextPhase()">Pass Turn</button>
+        </div>
+
+        <div class="hand-container">
+            <div style="font-size: 12px; margin-bottom: 5px;">YOUR HAND (<span id="hand-count">0</span>/10)</div>
+            <div class="hand" id="player-hand"></div>
+        </div>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const MAX_POINTS = 15;
+        const MAX_HAND_SIZE = 10;
+        const DECK_SIZE = 15;
+
+        // Master Card Catalog
+        const CARD_CATALOG = [
+            // Basic & Uncommon Students
+            { id: 's1', faction: 'student', name: 'Basic Student', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '🎒' },
+            { id: 's2', faction: 'student', name: 'Nerd', att: 0, hp: 1, cost: 0, type: 'minion', rarity: 'common', icon: '🤓' },
+            { id: 's3', faction: 'student', name: 'Bully', att: 2, hp: 3, cost: 3, type: 'minion', rarity: 'rare', icon: '🥊' },
+            { id: 's4', faction: 'student', name: 'Hall Monitor', att: 2, hp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🚨' },
+            { id: 's5', faction: 'student', name: 'Gym Coach', att: 3, hp: 4, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏋️' },
+            { id: 's6', faction: 'student', name: 'Skater Kid', att: 3, hp: 1, cost: 2, type: 'minion', rarity: 'uncommon', icon: '🛹' },
+            { id: 's7', faction: 'student', name: 'Paper Airplane', cost: 1, type: 'trick', damageHero: 2, rarity: 'uncommon', icon: '✈️' },
+            { id: 's8', faction: 'student', name: 'Juice Box', cost: 2, type: 'trick', healStudent: 3, rarity: 'uncommon', icon: '🧃' },
+            { id: 's9', faction: 'student', name: 'Note Passer', cost: 2, type: 'trick', draw: 1, rarity: 'uncommon', icon: '📝' },
+            
+            // Rare, Super Rare, Legendary Students
+            { id: 's10', faction: 'student', name: 'Trombone Player', att: 3, hp: 4, cost: 4, type: 'minion', rarity: 'rare', icon: '🎺', onPlay: 'debuffLaneTeachers' },
+            { id: 's11', faction: 'student', name: 'Senior Prank', cost: 5, type: 'trick', rarity: 'super-rare', icon: '🃏', effect: 'swapTeacherStats' },
+            { id: 's12', faction: 'student', name: 'Last Day of School', cost: 7, type: 'trick', rarity: 'legendary', icon: '🔔', effect: 'bonusAttack' },
+
+            // Basic & Uncommon Teachers
+            { id: 't1', faction: 'teacher', name: 'Basic Teacher', att: 1, hp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '📏' },
+            { id: 't2', faction: 'teacher', name: 'Ruler Toss', cost: 2, type: 'trick', damage: 2, rarity: 'rare', icon: '🎯' },
+            { id: 't3', faction: 'teacher', name: 'Tanky Teacher', att: 2, hp: 3, cost: 3, type: 'minion', rarity: 'epic', icon: '🛡️' },
+            { id: 't4', faction: 'teacher', name: 'Substitute Teacher', att: 1, hp: 3, cost: 1, type: 'minion', rarity: 'uncommon', icon: '📋' },
+            { id: 't5', faction: 'teacher', name: 'Coffee Refill', cost: 2, type: 'trick', healTeacher: 3, rarity: 'uncommon', icon: '☕' },
+
+            // Rare, Super Rare, Legendary Teachers
+            { id: 't6', faction: 'teacher', name: 'Snooze Button', cost: 2, type: 'trick', rarity: 'rare', icon: '⏰', effect: 'freezeTeacher' },
+            { id: 't7', faction: 'teacher', name: 'Strict Proctor', att: 1, hp: 4, cost: 2, type: 'minion', rarity: 'rare', icon: '🧐', onPlay: 'freezeLaneStudent' },
+            { id: 't8', faction: 'teacher', name: 'Red Pen', cost: 2, type: 'trick', rarity: 'rare', icon: '🖊️', effect: 'destroyLowHpStudent' },
+            { id: 't9', faction: 'teacher', name: 'Curfew Lockdown', cost: 4, type: 'trick', rarity: 'super-rare', icon: '🔒', effect: 'lockTricks' },
+            { id: 't10', faction: 'teacher', name: 'The Principal', att: 6, hp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '👔', onPlay: 'expelStrongest', passive: 'buffOnStudentDeath' }
+        ];
+
+        // Global Player Data
+        let playerProfile = {
+            rulers: 50,
+            collection: {
+                's1': 4, 's2': 4, 's3': 4, 's4': 2, 's5': 1,
+                't1': 4, 't2': 4, 't3': 4, 't4': 2, 't5': 1
+            },
+            studentDeck: ['s1','s1','s1','s1','s2','s2','s2','s2','s3','s3','s3','s3','s4','s4','s5'],
+            teacherDeck: ['t1','t1','t1','t1','t2','t2','t2','t2','t3','t3','t3','t3','t4','t4','t5']
+        };
+
+        // Battle State
+        let round = 1;
+        let currentPhase = 'teacher';
+        let selectedTrickIndex = null;
+        let editingDeckSide = 'student';
+
+        let player = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
+        let enemy = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [], deck: [] };
+
+        function log(msg) {
+            const logBox = document.getElementById('log');
+            logBox.innerHTML += msg + '<br>';
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function showDamage(element, dmg) {
+            if (!element) return;
+            const rect = element.getBoundingClientRect();
+            const float = document.createElement('div');
+            float.className = 'dmg-float';
+            float.innerText = `-${dmg}`;
+            float.style.left = `${rect.left + rect.width/2 - 10}px`;
+            float.style.top = `${rect.top}px`;
+            document.body.appendChild(float);
+            setTimeout(() => float.remove(), 800);
+        }
+
+        function updateRulersDisplay() {
+            document.getElementById('rulers-count').innerText = playerProfile.rulers;
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('mode-screen').classList.add('hidden');
+            document.getElementById('deck-screen').classList.add('hidden');
+            document.getElementById('shop-screen').classList.add('hidden');
+            document.getElementById('game-board').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+
+            if (screenId === 'deck-screen') renderDeckBuilder();
+            updateRulersDisplay();
+        }
+
+        // --- DECK BUILDER ---
+        function switchDeckSide(side) {
+            editingDeckSide = side;
+            document.getElementById('deck-side-title').innerText = side.charAt(0).toUpperCase() + side.slice(1);
+            renderDeckBuilder();
+        }
+
+        function renderDeckBuilder() {
+            const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
+            document.getElementById('deck-card-count').innerText = activeDeckList.length;
+
+            const activeDeckGrid = document.getElementById('active-deck-grid');
+            activeDeckGrid.innerHTML = '';
+
+            // Group deck cards
+            let deckCounts = {};
+            activeDeckList.forEach(id => deckCounts[id] = (deckCounts[id] || 0) + 1);
+
+            Object.keys(deckCounts).forEach(cardId => {
+                const card = CARD_CATALOG.find(c => c.id === cardId);
+                const el = createCardElement(card, false);
+                el.innerHTML += `<div class="card-count-badge">x${deckCounts[cardId]}</div>`;
+                el.onclick = () => removeCardFromDeck(cardId);
+                activeDeckGrid.appendChild(el);
+            });
+
+            const collectionGrid = document.getElementById('collection-grid');
+            collectionGrid.innerHTML = '';
+
+            CARD_CATALOG.filter(c => c.faction === editingDeckSide).forEach(card => {
+                const owned = playerProfile.collection[card.id] || 0;
+                if (owned > 0) {
+                    const el = createCardElement(card, false);
+                    el.innerHTML += `<div class="card-count-badge">x${owned}</div>`;
+                    el.onclick = () => addCardToDeck(card.id);
+                    collectionGrid.appendChild(el);
+                }
+            });
+        }
+
+        function addCardToDeck(cardId) {
+            const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
+            const countInDeck = activeDeckList.filter(id => id === cardId).length;
+            const owned = playerProfile.collection[cardId] || 0;
+
+            if (activeDeckList.length >= DECK_SIZE) {
+                alert("Deck is full! Maximum 15 cards.");
+                return;
+            }
+            if (countInDeck >= 4) {
+                alert("You can only have up to 4 copies of a card in your deck.");
+                return;
+            }
+            if (countInDeck >= owned) {
+                alert("You don't own any more copies of this card!");
+                return;
+            }
+
+            activeDeckList.push(cardId);
+            renderDeckBuilder();
+        }
+
+        function removeCardFromDeck(cardId) {
+            const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
+            const index = activeDeckList.indexOf(cardId);
+            if (index !== -1) {
+                activeDeckList.splice(index, 1);
+                renderDeckBuilder();
+            }
+        }
+
+        // --- SHOP & PACK OPENING ---
+        function buyPack() {
+            if (playerProfile.rulers < 50) {
+                alert("Not enough Golden Rulers!");
+                return;
+            }
+
+            playerProfile.rulers -= 50;
+            updateRulersDisplay();
+
+            const packResultsGrid = document.getElementById('pack-results');
+            packResultsGrid.innerHTML = '';
+
+            let pulledCards = [];
+            const uncommons = CARD_CATALOG.filter(c => c.rarity === 'uncommon');
+            const rares = CARD_CATALOG.filter(c => c.rarity === 'rare');
+            const superRares = CARD_CATALOG.filter(c => c.rarity === 'super-rare');
+            const legendaries = CARD_CATALOG.filter(c => c.rarity === 'legendary');
+
+            // Guaranteed: 2 Uncommons, 1 Rare
+            pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
+            pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
+            pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
+
+            // Bonus Roll
+            const rand = Math.random();
+            if (rand < 0.05) {
+                pulledCards.push(legendaries[Math.floor(Math.random() * legendaries.length)]);
+            } else if (rand < 0.20) {
+                pulledCards.push(superRares[Math.floor(Math.random() * superRares.length)]);
+            } else if (rand < 0.50) {
+                pulledCards.push(rares[Math.floor(Math.random() * rares.length)]);
+            } else {
+                pulledCards.push(uncommons[Math.floor(Math.random() * uncommons.length)]);
+            }
+
+            // Process Pulled Cards & Recycle Duplicates past 4
+            pulledCards.forEach(card => {
+                let currentCount = playerProfile.collection[card.id] || 0;
+                const cardEl = createCardElement(card, false);
+
+                if (currentCount >= 4) {
+                    let refund = 5;
+                    if (card.rarity === 'rare') refund = 10;
+                    if (card.rarity === 'super-rare') refund = 25;
+                    if (card.rarity === 'legendary') refund = 50;
+
+                    playerProfile.rulers += refund;
+                    cardEl.innerHTML += `<div style="position:absolute; bottom:0; background:rgba(0,0,0,0.8); width:100%; text-align:center; color:#f1c40f; font-size:10px;">Recycled! +${refund}📏</div>`;
+                } else {
+                    playerProfile.collection[card.id] = currentCount + 1;
+                }
+
+                packResultsGrid.appendChild(cardEl);
+            });
+
+            updateRulersDisplay();
+        }
+
+        function createCardElement(card, showCost = true) {
+            const cardEl = document.createElement('div');
+            cardEl.className = `card rarity-${card.rarity}`;
+
+            let body = showCost ? `<div class="card-cost">${card.cost}</div>` : '';
+            body += `<div style="font-size:10px;">${card.name}</div>`;
+            body += `<div class="card-art">${card.icon}</div>`;
+            if(card.type === 'minion') {
+                body += `<div class="card-stats"><span class="stat-box stat-att">${card.att}</span><span class="stat-box stat-hp">${card.hp}</span></div>`;
+            } else {
+                body += `<div style="font-size:9px; text-align:center;">${card.type.toUpperCase()}</div>`;
+            }
+            cardEl.innerHTML = body;
+            return cardEl;
+        }
+
+        // --- BATTLE SYSTEM ---
+        function startGame(role) {
+            player.role = role;
+            enemy.role = (role === 'student') ? 'teacher' : 'student';
+
+            let pDeckList = player.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
+            let eDeckList = enemy.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
+
+            if (pDeckList.length < DECK_SIZE) {
+                alert(`Your ${player.role} deck must have exactly 15 cards! Go to Decks to build it.`);
+                return;
+            }
+
+            player.deck = pDeckList.map(id => ({ ...CARD_CATALOG.find(c => c.id === id), uid: Math.random() }));
+            enemy.deck = eDeckList.map(id => ({ ...CARD_CATALOG.find(c => c.id === id), uid: Math.random() }));
+
+            // Shuffle decks
+            player.deck.sort(() => Math.random() - 0.5);
+            enemy.deck.sort(() => Math.random() - 0.5);
+
+            player.hp = 20; player.points = 1; player.maxPoints = 1; player.hand = []; player.field = [];
+            enemy.hp = 20; enemy.points = 1; enemy.maxPoints = 1; enemy.hand = []; enemy.field = [];
+
+            showScreen('game-board');
+
+            document.getElementById('player-name').innerText = `Player (${player.role.toUpperCase()})`;
+            document.getElementById('enemy-name').innerText = `CPU (${enemy.role.toUpperCase()})`;
+
+            for(let i = 0; i < 3; i++) {
+                drawCard(player);
+                drawCard(enemy);
+            }
+
+            log(`Battle Started! You are playing as <b>${player.role}s</b>.`);
+            startPhase('teacher');
+        }
+
+        function drawCard(character) {
+            if (character.hand.length >= MAX_HAND_SIZE) return;
+            if (character.deck.length > 0) {
+                character.hand.push(character.deck.pop());
+            }
+        }
+
+        function startPhase(phase) {
+            currentPhase = phase;
+            const banner = document.getElementById('phase-banner');
+            const passBtn = document.getElementById('end-turn-btn');
+
+            if (phase === 'teacher') {
+                banner.innerText = "Phase 1: Teachers Turn";
+                banner.style.background = "#c0392b";
+                log("<b>--- TEACHERS TURN ---</b>");
+
+                if (player.role === 'teacher') passBtn.disabled = false;
+                else { passBtn.disabled = true; setTimeout(runAIPhase, 800); }
+            } else if (phase === 'student') {
+                banner.innerText = "Phase 2: Students Turn";
+                banner.style.background = "#2980b9";
+                log("<b>--- STUDENTS TURN ---</b>");
+
+                if (player.role === 'student') passBtn.disabled = false;
+                else { passBtn.disabled = true; setTimeout(runAIPhase, 800); }
+            } else if (phase === 'fight') {
+                banner.innerText = "Phase 3: Fight Phase!";
+                banner.style.background = "#8e44ad";
+                passBtn.disabled = true;
+                log("<b>--- FIGHT PHASE ---</b>");
+                setTimeout(runFightPhase, 1000);
+            }
+
+            updateUI();
+        }
+
+        function isPlayerActiveTurn() {
+            return (currentPhase === 'teacher' && player.role === 'teacher') ||
+                   (currentPhase === 'student' && player.role === 'student');
+        }
+
+        function nextPhase() {
+            if (!isPlayerActiveTurn()) return;
+            selectedTrickIndex = null;
+
+            if (currentPhase === 'teacher') startPhase('student');
+            else if (currentPhase === 'student') startPhase('fight');
+        }
+
+        function updateUI() {
+            const pLabel = player.role === 'student' ? 'SP' : 'TP';
+            const eLabel = enemy.role === 'student' ? 'SP' : 'TP';
+
+            document.getElementById('player-hp').innerText = `HP: ${player.hp}`;
+            document.getElementById('player-points').innerText = `${pLabel}: ${player.points}/${player.maxPoints}`;
+            document.getElementById('enemy-hp').innerText = `HP: ${enemy.hp}`;
+            document.getElementById('enemy-points').innerText = `${eLabel}: ${enemy.points}/${enemy.maxPoints}`;
+            document.getElementById('hand-count').innerText = player.hand.length;
+
+            // Render Hand
+            const handEl = document.getElementById('player-hand');
+            handEl.innerHTML = '';
+            player.hand.forEach((card, index) => {
+                const cardEl = createCardElement(card, true);
+                cardEl.onclick = () => handleHandCardClick(index);
+                handEl.appendChild(cardEl);
+            });
+
+            renderField('player-field', player.field, false);
+            renderField('enemy-field', enemy.field, true);
+        }
+
+        function renderField(elementId, fieldList, isEnemy) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            fieldList.forEach((minion, index) => {
+                const mEl = createCardElement(minion, false);
+                mEl.className = `minion rarity-${minion.rarity}`;
+
+                if (isEnemy && selectedTrickIndex !== null) {
+                    mEl.classList.add('targetable');
+                    mEl.onclick = () => handleEnemyMinionClick(index, mEl);
+                }
+
+                container.appendChild(mEl);
+            });
+        }
+
+        function handleHandCardClick(index) {
+            if (!isPlayerActiveTurn()) return;
+
+            const card = player.hand[index];
+            if (card.cost > player.points) {
+                log("<span style='color:#e74c3c;'>Not enough points!</span>");
+                return;
+            }
+
+            if (card.type === 'minion') {
+                player.points -= card.cost;
+                player.field.push({ ...card });
+                player.hand.splice(index, 1);
+                selectedTrickIndex = null;
+                log(`You summoned <b>${card.name}</b>.`);
+            } else if (card.type === 'trick') {
+                if (card.damage) {
+                    selectedTrickIndex = index;
+                    log("Select an enemy minion to cast trick.");
+                    return;
+                }
+                
+                // Direct Tricks Execution
+                player.points -= card.cost;
+                if (card.damageHero) {
+                    enemy.hp = Math.max(0, enemy.hp - card.damageHero);
+                    log(`Used ${card.name}! Dealt ${card.damageHero} DMG to Enemy Hero.`);
+                }
+                if (card.draw) {
+                    drawCard(player);
+                    log(`Used ${card.name}! Drew 1 card.`);
+                }
+                player.hand.splice(index, 1);
+            }
+            updateUI();
+        }
+
+        function handleEnemyMinionClick(targetIndex, element) {
+            if (selectedTrickIndex !== null && isPlayerActiveTurn()) {
+                const card = player.hand[selectedTrickIndex];
+                player.points -= card.cost;
+                const target = enemy.field[targetIndex];
+                
+                target.hp -= card.damage;
+                showDamage(element, card.damage);
+                log(`You used <b>${card.name}</b> on ${target.name} for ${card.damage} DMG.`);
+
+                // Correct Splice Target Fix Applied Here!
+                if (target.hp <= 0) {
+                    enemy.field.splice(targetIndex, 1);
+                }
+
+                player.hand.splice(selectedTrickIndex, 1);
+                selectedTrickIndex = null;
+                checkGameOver();
+                updateUI();
+            }
+        }
+
+        // --- AI LOGIC ---
+        function runAIPhase() {
+            let played = true;
+            while (played) {
+                played = false;
+                let playable = enemy.hand
+                    .map((card, idx) => ({ card, idx }))
+                    .filter(item => item.card.cost <= enemy.points);
+
+                if (playable.length === 0) break;
+
+                let minionItems = playable.filter(i => i.card.type === 'minion');
+                if (minionItems.length > 0) {
+                    minionItems.sort((a,b) => (b.card.att + b.card.hp) - (a.card.att + a.card.hp));
+                    let best = minionItems[0];
+                    enemy.points -= best.card.cost;
+                    enemy.field.push({ ...best.card });
+                    enemy.hand.splice(best.idx, 1);
+                    log(`CPU summoned <b>${best.card.name}</b>.`);
+                    played = true;
+                }
+            }
+
+            updateUI();
+            setTimeout(() => {
+                if (currentPhase === 'teacher') startPhase('student');
+                else if (currentPhase === 'student') startPhase('fight');
+            }, 1000);
+        }
+
+        // --- FIGHT PHASE ---
+        async function runFightPhase() {
+            let maxLanes = Math.max(player.field.length, enemy.field.length);
+
+            for (let i = 0; i < maxLanes; i++) {
+                let pMinion = player.field[i];
+                let eMinion = enemy.field[i];
+
+                if (pMinion && eMinion) {
+                    eMinion.hp -= pMinion.att;
+                    pMinion.hp -= eMinion.att;
+                    log(`Lane ${i+1}: ${pMinion.name} and ${eMinion.name} fought each other!`);
+                } else if (pMinion && !eMinion) {
+                    enemy.hp = Math.max(0, enemy.hp - pMinion.att);
+                    showDamage(document.getElementById('enemy-banner'), pMinion.att);
+                    log(`Lane ${i+1}: Your ${pMinion.name} hit Enemy Hero for ${pMinion.att} DMG!`);
+                } else if (!pMinion && eMinion) {
+                    player.hp = Math.max(0, player.hp - eMinion.att);
+                    showDamage(document.getElementById('player-banner'), eMinion.att);
+                    log(`Lane ${i+1}: Enemy ${eMinion.name} hit You for ${eMinion.att} DMG!`);
+                }
+
+                updateUI();
+                await new Promise(r => setTimeout(r, 800));
+                checkGameOver();
+            }
+
+            player.field = player.field.filter(m => m.hp > 0);
+            enemy.field = enemy.field.filter(m => m.hp > 0);
+            updateUI();
+
+            setTimeout(() => {
+                round++;
+                player.maxPoints = Math.min(MAX_POINTS, player.maxPoints + 1);
+                enemy.maxPoints = Math.min(MAX_POINTS, enemy.maxPoints + 1);
+                player.points = player.maxPoints;
+                enemy.points = enemy.maxPoints;
+
+                drawCard(player);
+                drawCard(enemy);
+
+                log(`<b>--- ROUND ${round} ---</b>`);
+                startPhase('teacher');
+            }, 1000);
+        }
+
+        function checkGameOver() {
+            if (player.hp <= 0 && enemy.hp <= 0) {
+                alert("It's a Draw!");
+                showScreen('mode-screen');
+            } else if (player.hp <= 0) {
+                alert("Game Over! You were defeated!");
+                showScreen('mode-screen');
+            } else if (enemy.hp <= 0) {
+                playerProfile.rulers += 15;
+                alert("Victory! You won 15 Golden Rulers! 📏");
+                updateRulersDisplay();
+                showScreen('mode-screen');
+            }
+        }
+    </script>
+</body>
+</html>
