@@ -265,61 +265,6 @@
             width: 180px;
             position: relative;
         }
-        .info-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #e67e22;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .pack-tear-anim { animation: packTear 0.6s ease-in-out forwards; }
-        @keyframes packTear {
-            0% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.1) rotate(-5deg); filter: brightness(1.3); }
-            100% { transform: scale(0) rotate(15deg); opacity: 0; }
-        }
-
-        .card-pop-in { animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes cardPop {
-            0% { transform: scale(0) translateY(40px); opacity: 0; }
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        @keyframes pulse { 0% { box-shadow: 0 0 4px #e74c3c; } 100% { box-shadow: 0 0 12px #e74c3c; } }
-        @keyframes pulseYellow { 0% { box-shadow: 0 0 4px #f1c40f; } 100% { box-shadow: 0 0 12px #f1c40f; } }
-
-        .dmg-float {
-            position: absolute;
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 22px;
-            animation: floatUp 0.8s forwards;
-            pointer-events: none;
-            z-index: 100;
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-30px); }
-        }
-
-        #log {
-            background: #111;
-            color: #2ecc71;
-            font-family: monospace;
-            padding: 10px;
-            border-radius: 5px;
-            height: 90px;
-            overflow-y: auto;
-            font-size: 12px;
-        }
 
         .modal-overlay {
             position: fixed;
@@ -333,10 +278,10 @@
         .modal-card {
             background: #2c3e50;
             border-radius: 12px;
-            width: 300px;
+            width: 320px;
             padding: 20px;
             box-sizing: border-box;
-            border: 4px solid var(--rarity-common);
+            border: 4px solid var(--rarity-legendary);
             text-align: center;
             position: relative;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8);
@@ -351,6 +296,16 @@
             width: 28px; height: 28px;
             font-weight: bold;
             cursor: pointer;
+        }
+        .admin-input {
+            width: 80%;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: none;
+            text-align: center;
+            font-size: 16px;
+            letter-spacing: 2px;
         }
     </style>
 </head>
@@ -384,45 +339,30 @@
             <button class="btn btn-teacher" onclick="switchDeckSide('teacher')">Teacher Deck</button>
         </div>
         <div>
-            <h3><span id="deck-side-title">Student</span> Deck (<span id="deck-card-count">0</span>/15 Cards) — <i>Click card to remove</i></h3>
+            <h3><span id="deck-side-title">Student</span> Deck (<span id="deck-card-count">0</span>/15 Cards)</h3>
             <div class="card-grid" id="active-deck-grid"></div>
         </div>
-        <h3 style="margin-top: 15px;">Your Collection — <i>Click card to add | Right Click to Inspect</i></h3>
+        <h3 style="margin-top: 15px;">Your Collection</h3>
         <div class="card-grid" id="collection-grid"></div>
     </div>
 
     <div id="shop-screen" class="screen-container hidden">
         <h2>Card Shop</h2>
-        <div style="display: flex; gap: 15px; align-items: flex-start; flex-wrap: wrap;">
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div class="pack-box">
-                <button class="info-btn" onclick="showPackInfo('mini')">ⓘ</button>
                 <h3>Mini Pack</h3>
-                <div id="mini-pack-icon" style="font-size: 36px; margin: 8px 0;">📫</div>
-                <p style="font-size: 11px;">2 Cards! Guaranteed Uncommon + chance for Rare, Super Rare & Legendary!</p>
                 <button class="btn btn-shop" onclick="buyPack('mini')">Buy Mini (25 📏)</button>
             </div>
             <div class="pack-box">
-                <button class="info-btn" onclick="showPackInfo('standard')">ⓘ</button>
                 <h3>Standard Pack</h3>
-                <div id="standard-pack-icon" style="font-size: 36px; margin: 8px 0;">📦</div>
-                <p style="font-size: 11px;">4 Cards! Higher chances for Super Rare & Legendary!</p>
                 <button class="btn btn-shop" onclick="buyPack('standard')">Buy Pack (50 📏)</button>
             </div>
             <div class="pack-box" style="border: 2px solid #2ecc71;">
-                <button class="info-btn" onclick="showPackInfo('evergreen')">ⓘ</button>
                 <h3>Evergreen Pack</h3>
-                <div id="evergreen-pack-icon" style="font-size: 36px; margin: 8px 0;">🌲</div>
-                <p style="font-size: 11px;">5 Cards! Features all newly added expansion cards!</p>
                 <button class="btn btn-shop" onclick="buyPack('evergreen')">Buy Pack (100 📏)</button>
             </div>
-
-            <div style="flex-grow: 1; min-width: 250px;">
-                <h3>Pack Openings</h3>
-                <div class="card-grid" id="pack-results" style="min-height: 180px;">
-                    <div style="grid-column: 1/-1; text-align: center; color: #7f8c8d; padding-top: 50px;">Open a pack to reveal cards!</div>
-                </div>
-            </div>
         </div>
+        <div class="card-grid" id="pack-results" style="margin-top:20px; min-height: 180px;"></div>
     </div>
 
     <div id="game-board" class="hidden">
@@ -440,7 +380,7 @@
         </div>
 
         <div>
-            <div class="battlefield-title">Your Field (Click hand card, then lane slot or Mascot to stack)</div>
+            <div class="battlefield-title">Your Field</div>
             <div class="battlefield" id="player-field"></div>
         </div>
 
@@ -452,32 +392,32 @@
         </div>
 
         <div class="hand-container">
-            <div style="font-size: 12px; margin-bottom: 5px;">YOUR HAND (<span id="hand-count">0</span>/10) — <i>Right Click to Inspect Card</i></div>
+            <div style="font-size: 12px; margin-bottom: 5px;">YOUR HAND (<span id="hand-count">0</span>/10)</div>
             <div class="hand" id="player-hand"></div>
         </div>
 
-        <div id="log"></div>
+        <div id="log" style="background:#111; color:#2ecc71; font-family:monospace; padding:10px; border-radius:5px; height:90px; overflow-y:auto; font-size:12px;"></div>
     </div>
 
-    <div id="inspect-modal" class="modal-overlay hidden">
-        <div id="inspect-box" class="modal-card">
-            <button class="modal-close" onclick="closeInspector()">✕</button>
-            <div id="inspect-art" style="font-size: 48px; margin: 10px 0;">🎒</div>
-            <h2 id="inspect-title" style="margin: 5px 0;">Card Name</h2>
-            <div id="inspect-rarity" style="font-size: 12px; font-weight: bold; text-transform: uppercase; color: #f1c40f; margin-bottom: 8px;">Common</div>
-            <div id="inspect-stats" style="font-size: 14px; margin-bottom: 10px;">Cost: 1 | Att: 1 | HP: 1</div>
-            <p id="inspect-desc" style="font-size: 12px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; text-align: left;">Ability description goes here.</p>
-            <p id="inspect-flavor" style="font-size: 11px; font-style: italic; color: #bdc3c7;"></p>
+    <div id="admin-passcode-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeAdminPasscode()">✕</button>
+            <h2>Admin Login</h2>
+            <p style="font-size:12px;">Enter Access Code:</p>
+            <input type="password" id="admin-passcode-input" class="admin-input" placeholder="******" maxlength="6">
+            <br>
+            <button class="btn btn-action" onclick="submitAdminCode()">Submit Code</button>
+            <p id="admin-error-msg" style="color:#e74c3c; font-size:11px; margin-top:5px;" class="hidden">Incorrect Access Code!</p>
         </div>
     </div>
 
     <div id="admin-modal" class="modal-overlay hidden">
         <div class="modal-card" style="border-color: #e74c3c;">
             <button class="modal-close" onclick="closeAdmin()">✕</button>
-            <h2>Admin Panel</h2>
-            <p style="font-size: 12px;">Cheat Menu Activated!</p>
+            <h2 style="color:#e74c3c;">⚙️ Admin Panel</h2>
+            <p style="font-size: 12px;">Cheats Activated!</p>
             <button class="btn btn-shop" style="width: 100%; margin-bottom: 10px;" onclick="addAdminRulers()">+1000 Golden Rulers</button>
-            <button class="btn btn-main" style="width: 100%;" onclick="addAdminAllCards()">Unlock 4x Every Card</button>
+            <button class="btn btn-main" style="width: 100%; margin-bottom: 10px;" onclick="addAdminAllCards()">Unlock 4x Every Card</button>
         </div>
     </div>
 
@@ -486,119 +426,38 @@
         const MAX_HAND_SIZE = 10;
         const DECK_SIZE = 15;
 
-        // FULL CARD CATALOG
         const CARD_CATALOG = [
-            // --- BASE COMMONS ---
             { id: 's_basic', pack: 'base', faction: 'student', name: 'Basic Student', att: 1, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '🎒', desc: 'Standard student unit.' },
             { id: 's_nerd', pack: 'base', faction: 'student', name: 'Nerd', att: 0, hp: 1, maxHp: 1, cost: 0, type: 'minion', rarity: 'common', icon: '🤓', desc: 'Zero cost distraction unit.' },
             { id: 't_basic', pack: 'base', faction: 'teacher', name: 'Basic Teacher', att: 1, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'common', icon: '📏', desc: 'Standard teacher unit.' },
-            { id: 't_sub_common', pack: 'base', faction: 'teacher', name: 'Substitute Aid', att: 1, hp: 2, maxHp: 2, cost: 1, type: 'minion', rarity: 'common', icon: '📝', desc: 'Basic teacher helper.' },
-
-            // --- BASE UNCOMMONS ---
-            { id: 's_coffee', pack: 'base', faction: 'teacher', name: 'Coffee Refill', cost: 2, type: 'trick', healTeacher: 3, rarity: 'uncommon', icon: '☕', desc: 'Heals your Teacher Hero by 3 HP.' },
-            { id: 't_sub', pack: 'base', faction: 'teacher', name: 'Substitute Teacher', att: 1, hp: 3, maxHp: 3, cost: 1, type: 'minion', rarity: 'uncommon', icon: '📋', desc: 'Standard defensive Teacher unit.' },
-            { id: 't_hall', pack: 'base', faction: 'teacher', name: 'Hall Monitor', att: 2, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🚨', desc: 'Fast attacker.' },
-            { id: 't_gym', pack: 'base', faction: 'teacher', name: 'Gym Coach', att: 3, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏋️', desc: 'Solid front-line Teacher.' },
-            { id: 's_plane', pack: 'base', faction: 'student', name: 'Paper Airplane', cost: 1, type: 'trick', damageHero: 2, rarity: 'uncommon', icon: '✈️', desc: 'Deals 2 direct damage to Enemy Hero.' },
-            { id: 's_juice', pack: 'base', faction: 'student', name: 'Juice Box', cost: 2, type: 'trick', healStudent: 3, rarity: 'uncommon', icon: '🧃', desc: 'Heals your Student Hero by 3 HP.' },
-            { id: 's_skater', pack: 'base', faction: 'student', name: 'Skater Kid', att: 3, hp: 1, maxHp: 1, cost: 2, type: 'minion', rarity: 'uncommon', icon: '🛹', desc: 'High attack glass cannon.' },
-            { id: 's_note', pack: 'base', faction: 'student', name: 'Note Passer', cost: 2, type: 'trick', draw: 1, rarity: 'uncommon', icon: '📝', desc: 'Draw 1 card.' },
-            { id: 't_trainee', pack: 'base', faction: 'teacher', name: 'Hall Monitor Trainee', att: 1, hp: 2, maxHp: 2, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🔍', trait: 'onTheMove', desc: 'On The Move: Shifts position each turn.' },
-            { id: 't_quiz_s', pack: 'base', faction: 'teacher', name: 'Pop Quiz Surprise', cost: 2, type: 'trick', damage: 2, rarity: 'uncommon', icon: '⚡', desc: 'Deals 2 damage to target minion or hero.' },
-            { id: 's_rowdy', pack: 'base', faction: 'student', name: 'Rowdy Freshman', att: 2, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '💥', trait: 'inseparable', desc: 'Inseparable unit.' },
-            { id: 's_spitball', pack: 'base', faction: 'student', name: 'Spitball Cannon', cost: 1, type: 'trick', damage: 1, rarity: 'uncommon', icon: '💦', desc: 'Deals 1 damage.' },
-
-            // --- BASE RARES ---
-            { id: 't_gradebook', pack: 'base', faction: 'teacher', name: 'Gradebook Lock', cost: 3, type: 'trick', rarity: 'rare', icon: '📕', desc: 'Reduces enemy Student damage.' },
-            { id: 's_slingshot', pack: 'base', faction: 'student', name: 'Precision Slingshot', cost: 3, type: 'trick', damage: 3, rarity: 'rare', icon: '🎯', desc: 'Deals 3 target damage.' },
-
-            // --- EVERGREEN PACK: UNCOMMONS ---
-            { id: 'eg_chalk_cleaner', pack: 'evergreen', faction: 'teacher', name: 'Chalkboard Cleaner', att: 1, hp: 2, maxHp: 2, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🧹', trait: 'chalkDust', desc: 'Chalk Dust: Reduces attack of adjacent lane Students by 1 when taking damage.', flavor: 'A cloud of dust blinds nearby students!' },
-            { id: 'eg_erased_hw', pack: 'evergreen', faction: 'teacher', name: 'Erased Homework', cost: 1, type: 'trick', rarity: 'uncommon', icon: '📄', desc: 'Give an enemy Student -2 Attack this turn.' },
-            { id: 'eg_eraser_clapper', pack: 'evergreen', faction: 'teacher', name: 'Eraser Clapper', att: 1, hp: 3, maxHp: 3, cost: 2, type: 'minion', rarity: 'uncommon', icon: '🧼', trait: 'chalkDust', desc: 'Chalk Dust: Reduces attack of adjacent lane Students by 1 when taking damage.' },
-            { id: 'eg_quiet_bell', pack: 'evergreen', faction: 'teacher', name: 'Quiet Bell', cost: 2, type: 'trick', rarity: 'uncommon', icon: '🔔', desc: "Reduce an enemy Student's Attack to 0 for this turn." },
-            { id: 'eg_supply_guard', pack: 'evergreen', faction: 'teacher', name: 'Supply Closet Guard', att: 2, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🔑', desc: 'High Health defensive unit.' },
-            { id: 'eg_early_runner', pack: 'evergreen', faction: 'student', name: 'Early Bird Runner', att: 2, hp: 1, maxHp: 1, cost: 1, type: 'minion', rarity: 'uncommon', icon: '🏃', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.', flavor: 'Sprinting straight for freedom when the coast is clear!' },
-            { id: 'eg_recess_sprinter', pack: 'evergreen', faction: 'student', name: 'Recess Sprinter', att: 3, hp: 1, maxHp: 1, cost: 2, type: 'minion', rarity: 'uncommon', icon: '👟', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
-            { id: 'eg_shoulder_ride', pack: 'evergreen', faction: 'student', name: 'Shoulder Ride Kid', cost: 2, type: 'trick', rarity: 'uncommon', icon: '🧒', trait: 'piggyback', desc: 'Piggyback: Grant target Student +1 Attack and +2 Health.' },
-            { id: 'eg_sugar_rush', pack: 'evergreen', faction: 'student', name: 'Sugar Rush', cost: 1, type: 'trick', rarity: 'uncommon', icon: '🍬', desc: 'Give a Student +2 Attack for this turn.' },
-            { id: 'eg_courtyard_runner', pack: 'evergreen', faction: 'student', name: 'Courtyard Runner', att: 3, hp: 2, maxHp: 2, cost: 3, type: 'minion', rarity: 'uncommon', icon: '🏞️', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
-
-            // --- EVERGREEN PACK: RARES ---
-            { id: 'eg_mascot_lower', pack: 'evergreen', faction: 'student', name: 'Mascot Lower Half', att: 1, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'rare', icon: '🦘', trait: 'mascotPiggyback', desc: 'Piggyback Receiver: You can stack another Student on top of this card! Absorbs stats; stacked card cannot attack.' },
-            { id: 'eg_fire_drill', pack: 'evergreen', faction: 'student', name: 'Fire Drill', cost: 3, type: 'trick', rarity: 'rare', icon: '🚨', desc: 'Move all friendly Students into open lanes.' },
-            { id: 'eg_track_captain', pack: 'evergreen', faction: 'student', name: 'Track Team Captain', att: 4, hp: 3, maxHp: 3, cost: 4, type: 'minion', rarity: 'rare', icon: '🥇', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
-            { id: 'eg_food_fight', pack: 'evergreen', faction: 'student', name: 'Food Fight Splash', cost: 3, type: 'trick', rarity: 'rare', icon: '🍕', desc: 'Deal 2 damage to all Teachers in center and adjacent lanes.' },
-            { id: 'eg_art_assistant', pack: 'evergreen', faction: 'teacher', name: 'Art Room Assistant', att: 1, hp: 4, maxHp: 4, cost: 2, type: 'minion', rarity: 'rare', icon: '🎨', trait: 'chalkDust', desc: 'Chalk Dust: Reduces attack of adjacent lane Students by 1 when taking damage.' },
-            { id: 'eg_roving_super', pack: 'evergreen', faction: 'teacher', name: 'Roving Supervisor', att: 2, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'rare', icon: '📻', trait: 'onTheMove', desc: 'On the Move: Shiftable tactical teacher.' },
-            { id: 'eg_strict_proctor', pack: 'evergreen', faction: 'teacher', name: 'Strict Proctor', att: 2, hp: 5, maxHp: 5, cost: 3, type: 'minion', rarity: 'rare', icon: '🧐', trait: 'noPranks', desc: 'No Pranks: Blocks student tricks while active.' },
-            { id: 'eg_cafeteria_mon', pack: 'evergreen', faction: 'teacher', name: 'Cafeteria Monitor', att: 3, hp: 5, maxHp: 5, cost: 4, type: 'minion', rarity: 'rare', icon: '🍎', desc: 'On Play: Heal your Teacher Hero for 4 Health.' },
-
-            // --- EVERGREEN PACK: SUPER RARES ---
-            { id: 'eg_cloudmaster', pack: 'evergreen', faction: 'teacher', name: 'Chalk Dust Cloudmaster', att: 4, hp: 5, maxHp: 5, cost: 5, type: 'minion', rarity: 'super-rare', icon: '☁️', trait: 'chalkDust', desc: 'Chalk Dust: Reduces attack of adjacent lane Students by 1 when taking damage.' },
-            { id: 'eg_shapeshift_teacher', pack: 'evergreen', faction: 'teacher', name: 'Shapeshifting Teacher', att: 3, hp: 6, maxHp: 6, cost: 5, type: 'minion', rarity: 'super-rare', icon: '👤', trait: 'onTheMove', desc: 'On the Move: Shift positions each turn.' },
-            { id: 'eg_head_security', pack: 'evergreen', faction: 'teacher', name: 'Head of Security', att: 3, hp: 7, maxHp: 7, cost: 5, type: 'minion', rarity: 'super-rare', icon: '🛡️', desc: 'Absorbs all damage targeting adjacent Teachers.' },
-            { id: 'eg_recess_champ', pack: 'evergreen', faction: 'student', name: 'Recess Champion', att: 5, hp: 3, maxHp: 3, cost: 5, type: 'minion', rarity: 'super-rare', icon: '🏆', trait: 'recessRush', desc: 'Recess Rush: Deals 2 direct damage to Teacher Hero if placed in an open lane.' },
-            { id: 'eg_band_leader', pack: 'evergreen', faction: 'student', name: 'Band Leader', att: 4, hp: 5, maxHp: 5, cost: 5, type: 'minion', rarity: 'super-rare', icon: '🥁', desc: 'Summon extra support units on play.' },
-            { id: 'eg_water_bomb', pack: 'evergreen', faction: 'student', name: 'Water Balloon Bomb', cost: 4, type: 'trick', rarity: 'super-rare', icon: '🎈', desc: 'Deal 3 damage to a Teacher and 2 splash damage to adjacent lanes.' },
-
-            // --- EVERGREEN PACK: LEGENDARIES ---
-            { id: 'eg_senior_rebellion', pack: 'evergreen', faction: 'student', name: 'Senior Year Rebellion', cost: 8, type: 'trick', rarity: 'legendary', icon: '📣', desc: 'All Students gain +4/+4, trigger Recess Rush, and perform an immediate bonus attack!' },
-            { id: 'eg_grand_chancellor', pack: 'evergreen', faction: 'teacher', name: 'Grand Chancellor', att: 8, hp: 8, maxHp: 8, cost: 8, type: 'minion', rarity: 'legendary', icon: '👑', desc: 'Fully heal your Teacher Hero and draw cards on play.' },
-            { id: 'eg_permanent_record', pack: 'evergreen', faction: 'teacher', name: 'Permanent Record Keeper', att: 5, hp: 6, maxHp: 6, cost: 6, type: 'minion', rarity: 'legendary', icon: '📜', desc: 'Increases Energy cost of enemy bounced cards permanently.' },
-            { id: 'eg_prom_pair', pack: 'evergreen', faction: 'student', name: 'The Prom Pair', att: 5, hp: 5, maxHp: 5, cost: 6, type: 'minion', rarity: 'legendary', icon: '👑', trait: 'inseparable', desc: 'Inseparable. Fully heal Student Hero and friendly units on play.' },
-            { id: 'eg_allstar_president', pack: 'evergreen', faction: 'student', name: 'All-Star Class President', att: 8, hp: 8, maxHp: 8, cost: 8, type: 'minion', rarity: 'legendary', icon: '🌟', trait: 'inseparable', desc: 'Piggyback: Grant target Student +8/+8. Inseparable. Recess Rush.' }
+            { id: 'eg_mascot_lower', pack: 'evergreen', faction: 'student', name: 'Mascot Lower Half', att: 1, hp: 4, maxHp: 4, cost: 3, type: 'minion', rarity: 'rare', icon: '🦘', trait: 'mascotPiggyback', desc: 'Piggyback Receiver: You can stack another Student on top of this card!' },
+            { id: 'eg_senior_rebellion', pack: 'evergreen', faction: 'student', name: 'Senior Year Rebellion', cost: 8, type: 'trick', rarity: 'legendary', icon: '📣', desc: 'All Students gain +4/+4, trigger Recess Rush, and perform an immediate bonus attack!' }
         ];
 
         let playerProfile = {
             rulers: 50,
-            collection: {
-                's_basic': 4, 's_nerd': 2, 's_plane': 2, 's_juice': 2, 's_skater': 2, 's_note': 2, 's_spitball': 1, 's_slingshot': 1,
-                't_basic': 4, 't_sub_common': 2, 't_sub': 2, 't_hall': 2, 't_gym': 2, 's_coffee': 2, 't_trainee': 2, 't_quiz_s': 1, 't_gradebook': 1
-            },
-            studentDeck: ['s_basic','s_basic','s_basic','s_basic','s_nerd','s_nerd','s_plane','s_plane','s_juice','s_juice','s_skater','s_skater','s_note','s_note','s_spitball'],
-            teacherDeck: ['t_basic','t_basic','t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','s_coffee','s_coffee','t_trainee','t_trainee','t_quiz_s']
+            collection: { 's_basic': 4, 's_nerd': 4, 't_basic': 4, 'eg_mascot_lower': 2, 'eg_senior_rebellion': 1 },
+            studentDeck: ['s_basic','s_basic','s_nerd','eg_mascot_lower','eg_senior_rebellion'],
+            teacherDeck: ['t_basic','t_basic']
         };
-
-        const BALANCED_CPU_DECKS = {
-            student: ['s_basic','s_basic','s_nerd','s_skater','s_skater','s_rowdy','s_rowdy','eg_early_runner','eg_recess_sprinter','s_plane','s_juice','s_note','s_spitball','eg_mascot_lower','eg_senior_rebellion'],
-            teacher: ['t_basic','t_basic','t_sub','t_sub','t_hall','t_hall','t_gym','t_gym','t_trainee','eg_chalk_cleaner','eg_eraser_clapper','t_gradebook','s_coffee','t_quiz_s','eg_cloudmaster']
-        };
-
-        let round = 1;
-        let currentPhase = 'teacher';
-        let selectedTrickIndex = null;
-        let selectedPiggybackIndex = null;
-        let selectedHandIndex = null;
-        let editingDeckSide = 'student';
-
-        let player = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [null, null, null, null, null], deck: [] };
-        let enemy = { role: '', hp: 20, maxPoints: 1, points: 1, hand: [], field: [null, null, null, null, null], deck: [] };
-
-        function log(msg) {
-            const logBox = document.getElementById('log');
-            logBox.innerHTML += msg + '<br>';
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-
-        function showDamage(element, dmg) {
-            if (!element) return;
-            const rect = element.getBoundingClientRect();
-            const float = document.createElement('div');
-            float.className = 'dmg-float';
-            float.innerText = `-${dmg}`;
-            float.style.left = `${rect.left + rect.width/2 - 10}px`;
-            float.style.top = `${rect.top}px`;
-            document.body.appendChild(float);
-            setTimeout(() => float.remove(), 800);
-        }
 
         function openAdminPrompt() {
-            let pass = prompt("Enter Admin Code:");
-            if (pass === "676713") {
+            document.getElementById('admin-passcode-input').value = '';
+            document.getElementById('admin-error-msg').classList.add('hidden');
+            document.getElementById('admin-passcode-modal').classList.remove('hidden');
+        }
+
+        function closeAdminPasscode() {
+            document.getElementById('admin-passcode-modal').classList.add('hidden');
+        }
+
+        function submitAdminCode() {
+            const input = document.getElementById('admin-passcode-input').value;
+            if (input === "676713") {
+                document.getElementById('admin-passcode-modal').classList.add('hidden');
                 document.getElementById('admin-modal').classList.remove('hidden');
-            } else if (pass !== null) {
-                alert("Incorrect Admin Code!");
+            } else {
+                document.getElementById('admin-error-msg').classList.remove('hidden');
             }
         }
 
@@ -608,36 +467,13 @@
 
         function addAdminRulers() {
             playerProfile.rulers += 1000;
-            updateRulersDisplay();
+            document.getElementById('rulers-count').innerText = playerProfile.rulers;
             alert("Added 1000 Golden Rulers!");
         }
 
         function addAdminAllCards() {
-            CARD_CATALOG.forEach(c => {
-                playerProfile.collection[c.id] = 4;
-            });
+            CARD_CATALOG.forEach(c => { playerProfile.collection[c.id] = 4; });
             alert("All cards unlocked (4x copies)!");
-        }
-
-        function inspectCard(card) {
-            document.getElementById('inspect-art').innerText = card.icon || '🃏';
-            document.getElementById('inspect-title').innerText = card.name;
-            document.getElementById('inspect-rarity').innerText = card.rarity;
-            document.getElementById('inspect-desc').innerText = card.desc || 'No special ability.';
-            document.getElementById('inspect-flavor').innerText = card.flavor ? `"${card.flavor}"` : '';
-
-            let statsStr = `Cost: ${card.cost}`;
-            if (card.type === 'minion') statsStr += ` | Att: ${card.att} | HP: ${card.hp}`;
-            else statsStr += ` | TRICK`;
-            document.getElementById('inspect-stats').innerText = statsStr;
-
-            const modalBox = document.getElementById('inspect-box');
-            modalBox.style.borderColor = `var(--rarity-${card.rarity})`;
-            document.getElementById('inspect-modal').classList.remove('hidden');
-        }
-
-        function closeInspector() {
-            document.getElementById('inspect-modal').classList.add('hidden');
         }
 
         function updateRulersDisplay() {
@@ -649,600 +485,7 @@
             document.getElementById('deck-screen').classList.add('hidden');
             document.getElementById('shop-screen').classList.add('hidden');
             document.getElementById('game-board').classList.add('hidden');
-
             document.getElementById(screenId).classList.remove('hidden');
-
-            if (screenId === 'deck-screen') renderDeckBuilder();
-            updateRulersDisplay();
-        }
-
-        function switchDeckSide(side) {
-            editingDeckSide = side;
-            document.getElementById('deck-side-title').innerText = side.charAt(0).toUpperCase() + side.slice(1);
-            renderDeckBuilder();
-        }
-
-        function renderDeckBuilder() {
-            const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
-            document.getElementById('deck-card-count').innerText = activeDeckList.length;
-
-            const activeDeckGrid = document.getElementById('active-deck-grid');
-            activeDeckGrid.innerHTML = '';
-
-            let deckCounts = {};
-            activeDeckList.forEach(id => deckCounts[id] = (deckCounts[id] || 0) + 1);
-
-            Object.keys(deckCounts).forEach(cardId => {
-                const card = CARD_CATALOG.find(c => c.id === cardId);
-                if (card) {
-                    const el = createCardElement(card, false);
-                    el.innerHTML += `<div class="card-count-badge">x${deckCounts[cardId]}</div>`;
-                    el.onclick = () => removeCardFromDeck(cardId);
-                    el.oncontextmenu = (e) => { e.preventDefault(); inspectCard(card); };
-                    activeDeckGrid.appendChild(el);
-                }
-            });
-
-            const collectionGrid = document.getElementById('collection-grid');
-            collectionGrid.innerHTML = '';
-
-            CARD_CATALOG.filter(c => c.faction === editingDeckSide).forEach(card => {
-                const ownedTotal = playerProfile.collection[card.id] || 0;
-                if (ownedTotal > 0) {
-                    const inDeckCount = activeDeckList.filter(id => id === card.id).length;
-                    const availableInCollection = ownedTotal - inDeckCount;
-
-                    const el = createCardElement(card, false);
-                    el.innerHTML += `<div class="card-count-badge">x${availableInCollection}</div>`;
-                    if (availableInCollection <= 0) el.style.opacity = '0.4';
-                    el.onclick = () => addCardToDeck(card.id);
-                    el.oncontextmenu = (e) => { e.preventDefault(); inspectCard(card); };
-                    collectionGrid.appendChild(el);
-                }
-            });
-        }
-
-        function addCardToDeck(cardId) {
-            const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
-            const countInDeck = activeDeckList.filter(id => id === cardId).length;
-            const ownedTotal = playerProfile.collection[cardId] || 0;
-
-            if (activeDeckList.length >= DECK_SIZE) return alert("Deck is full! (Max 15).");
-            if (countInDeck >= 4) return alert("Maximum 4 copies allowed per card.");
-            if (countInDeck >= ownedTotal) return alert("No available copies remaining!");
-
-            activeDeckList.push(cardId);
-            renderDeckBuilder();
-        }
-
-        function removeCardFromDeck(cardId) {
-            const activeDeckList = editingDeckSide === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
-            const index = activeDeckList.indexOf(cardId);
-            if (index !== -1) {
-                activeDeckList.splice(index, 1);
-                renderDeckBuilder();
-            }
-        }
-
-        function getRandomCardByRarity(rarity, pack = 'all') {
-            let matches = CARD_CATALOG.filter(c => c.rarity === rarity);
-            if (pack === 'evergreen') matches = matches.filter(c => c.pack === 'evergreen');
-            return matches[Math.floor(Math.random() * matches.length)] || CARD_CATALOG[0];
-        }
-
-        function showPackInfo(type) {
-            if (type === 'mini') {
-                alert("📫 Mini Pack (25 📏):\n- Card 1: 100% Uncommon\n- Card 2: 40% Uncommon, 40% Rare, 15% Super Rare, 5% Legendary");
-            } else if (type === 'standard') {
-                alert("📦 Standard Pack (50 📏):\n- Card 1 & 2: 100% Uncommon\n- Card 3: 100% Rare\n- Card 4: 53% Rare, 35% Super Rare, 12% Legendary");
-            } else {
-                alert("🌲 Evergreen Pack (100 📏):\n- Contains 5 Cards!\n- Features legendary Senior Year Rebellion!\n- Guaranteed 1 Rare, 1 Super Rare, and higher Legendary odds!");
-            }
-        }
-
-        async function buyPack(type) {
-            let cost = (type === 'standard') ? 50 : (type === 'evergreen' ? 100 : 25);
-            if (playerProfile.rulers < cost) return alert("Not enough Golden Rulers!");
-
-            playerProfile.rulers -= cost;
-            updateRulersDisplay();
-
-            const packIcon = document.getElementById(`${type}-pack-icon`);
-            packIcon.classList.add('pack-tear-anim');
-            await new Promise(r => setTimeout(r, 600));
-            packIcon.classList.remove('pack-tear-anim');
-
-            const packResultsGrid = document.getElementById('pack-results');
-            packResultsGrid.innerHTML = '';
-
-            let pulledCards = [];
-
-            if (type === 'mini') {
-                pulledCards.push(getRandomCardByRarity('uncommon'));
-                const roll = Math.random();
-                if (roll < 0.05) pulledCards.push(getRandomCardByRarity('legendary'));
-                else if (roll < 0.20) pulledCards.push(getRandomCardByRarity('super-rare'));
-                else if (roll < 0.60) pulledCards.push(getRandomCardByRarity('rare'));
-                else pulledCards.push(getRandomCardByRarity('uncommon'));
-            } else if (type === 'standard') {
-                pulledCards.push(getRandomCardByRarity('uncommon'));
-                pulledCards.push(getRandomCardByRarity('uncommon'));
-                pulledCards.push(getRandomCardByRarity('rare'));
-                const roll = Math.random();
-                if (roll < 0.12) pulledCards.push(getRandomCardByRarity('legendary'));
-                else if (roll < 0.35) pulledCards.push(getRandomCardByRarity('super-rare'));
-                else pulledCards.push(getRandomCardByRarity('rare'));
-            } else {
-                pulledCards.push(getRandomCardByRarity('uncommon', 'evergreen'));
-                pulledCards.push(getRandomCardByRarity('uncommon', 'evergreen'));
-                pulledCards.push(getRandomCardByRarity('rare', 'evergreen'));
-                pulledCards.push(getRandomCardByRarity('super-rare', 'evergreen'));
-                const roll = Math.random();
-                if (roll < 0.25) pulledCards.push(getRandomCardByRarity('legendary', 'evergreen'));
-                else pulledCards.push(getRandomCardByRarity('rare', 'evergreen'));
-            }
-
-            for (let i = 0; i < pulledCards.length; i++) {
-                const card = pulledCards[i];
-                let currentCount = playerProfile.collection[card.id] || 0;
-                const cardEl = createCardElement(card, false);
-                cardEl.classList.add('card-pop-in');
-                cardEl.oncontextmenu = (e) => { e.preventDefault(); inspectCard(card); };
-
-                if (currentCount >= 4) {
-                    let refund = card.rarity === 'legendary' ? 50 : (card.rarity === 'super-rare' ? 25 : (card.rarity === 'rare' ? 10 : 5));
-                    playerProfile.rulers += refund;
-                    cardEl.innerHTML += `<div style="position:absolute; bottom:0; background:rgba(0,0,0,0.8); width:100%; text-align:center; color:#f1c40f; font-size:10px;">Recycled! +${refund}📏</div>`;
-                } else {
-                    playerProfile.collection[card.id] = currentCount + 1;
-                }
-
-                packResultsGrid.appendChild(cardEl);
-                await new Promise(r => setTimeout(r, 350));
-            }
-
-            updateRulersDisplay();
-        }
-
-        function createCardElement(card, showCost = true) {
-            const cardEl = document.createElement('div');
-            cardEl.className = `card rarity-${card.rarity}`;
-
-            let body = showCost ? `<div class="card-cost">${card.cost}</div>` : '';
-            body += `<div style="font-size:10px;">${card.name}</div>`;
-            body += `<div class="card-art">${card.icon}</div>`;
-            if(card.type === 'minion') {
-                const hpClass = (card.hp < card.maxHp) ? 'stat-box stat-hp-damaged' : 'stat-box stat-hp';
-                body += `<div class="card-stats"><span class="stat-box stat-att">${card.att}</span><span class="${hpClass}">${card.hp}</span></div>`;
-            } else {
-                body += `<div style="font-size:9px; text-align:center;">TRICK</div>`;
-            }
-            cardEl.innerHTML = body;
-            return cardEl;
-        }
-
-        function startGame(role) {
-            player.role = role;
-            enemy.role = (role === 'student') ? 'teacher' : 'student';
-
-            let pDeckList = player.role === 'student' ? playerProfile.studentDeck : playerProfile.teacherDeck;
-            let eDeckList = BALANCED_CPU_DECKS[enemy.role];
-
-            if (pDeckList.length < DECK_SIZE) return alert(`Your ${player.role} deck needs 15 cards! Current count: ${pDeckList.length}`);
-
-            player.deck = pDeckList.map(id => {
-                const item = CARD_CATALOG.find(c => c.id === id);
-                return { ...item, hp: item.hp || 1, maxHp: item.hp || 1, uid: Math.random() };
-            }).sort(() => Math.random() - 0.5);
-
-            enemy.deck = eDeckList.map(id => {
-                const item = CARD_CATALOG.find(c => c.id === id);
-                return { ...item, hp: item.hp || 1, maxHp: item.hp || 1, uid: Math.random() };
-            }).sort(() => Math.random() - 0.5);
-
-            player.hp = 20; player.points = 1; player.maxPoints = 1; player.hand = []; player.field = [null, null, null, null, null];
-            enemy.hp = 20; enemy.points = 1; enemy.maxPoints = 1; enemy.hand = []; enemy.field = [null, null, null, null, null];
-
-            showScreen('game-board');
-
-            document.getElementById('player-name').innerText = `Player (${player.role.toUpperCase()})`;
-            document.getElementById('enemy-name').innerText = `CPU (${enemy.role.toUpperCase()})`;
-
-            for(let i = 0; i < 3; i++) { drawCard(player); drawCard(enemy); }
-
-            log(`Battle Started! Playing as <b>${player.role}s</b>.`);
-            startPhase('teacher');
-        }
-
-        function drawCard(character) {
-            if (character.hand.length >= MAX_HAND_SIZE) return;
-            if (character.deck.length > 0) character.hand.push(character.deck.pop());
-        }
-
-        function startPhase(phase) {
-            currentPhase = phase;
-            const banner = document.getElementById('phase-banner');
-            const passBtn = document.getElementById('end-turn-btn');
-
-            if (phase === 'teacher') {
-                banner.innerText = "Phase 1: Teachers Turn";
-                banner.style.background = "#c0392b";
-                log("<b>--- TEACHERS TURN ---</b>");
-
-                if (player.role === 'teacher') passBtn.disabled = false;
-                else { passBtn.disabled = true; setTimeout(runAIPhase, 800); }
-            } else if (phase === 'student') {
-                banner.innerText = "Phase 2: Students Turn";
-                banner.style.background = "#2980b9";
-                log("<b>--- STUDENTS TURN ---</b>");
-
-                if (player.role === 'student') passBtn.disabled = false;
-                else { passBtn.disabled = true; setTimeout(runAIPhase, 800); }
-            } else if (phase === 'fight') {
-                banner.innerText = "Phase 3: Fight Phase!";
-                banner.style.background = "#8e44ad";
-                passBtn.disabled = true;
-                log("<b>--- FIGHT PHASE ---</b>");
-                setTimeout(runFightPhase, 1000);
-            }
-
-            updateUI();
-        }
-
-        function isPlayerActiveTurn() {
-            return (currentPhase === 'teacher' && player.role === 'teacher') ||
-                   (currentPhase === 'student' && player.role === 'student');
-        }
-
-        function nextPhase() {
-            if (!isPlayerActiveTurn()) return;
-            selectedHandIndex = null;
-            selectedTrickIndex = null;
-            selectedPiggybackIndex = null;
-
-            if (currentPhase === 'teacher') startPhase('student');
-            else if (currentPhase === 'student') startPhase('fight');
-        }
-
-        function updateUI() {
-            const pLabel = player.role === 'student' ? 'SP' : 'TP';
-            const eLabel = enemy.role === 'student' ? 'SP' : 'TP';
-
-            document.getElementById('player-hp').innerText = `HP: ${player.hp}`;
-            document.getElementById('player-points').innerText = `${pLabel}: ${player.points}/${player.maxPoints}`;
-            document.getElementById('enemy-hp').innerText = `HP: ${enemy.hp}`;
-            document.getElementById('enemy-points').innerText = `${eLabel}: ${enemy.points}/${enemy.maxPoints}`;
-            document.getElementById('hand-count').innerText = player.hand.length;
-
-            const handEl = document.getElementById('player-hand');
-            handEl.innerHTML = '';
-            player.hand.forEach((card, index) => {
-                const cardEl = createCardElement(card, true);
-                if (selectedHandIndex === index) {
-                    cardEl.style.transform = "translateY(-10px)";
-                    cardEl.style.borderColor = "#f1c40f";
-                }
-                cardEl.onclick = () => handleHandCardClick(index);
-                cardEl.oncontextmenu = (e) => { e.preventDefault(); inspectCard(card); };
-                handEl.appendChild(cardEl);
-            });
-
-            renderField('player-field', player.field, false);
-            renderField('enemy-field', enemy.field, true);
-        }
-
-        function renderField(elementId, fieldList, isEnemy) {
-            const container = document.getElementById(elementId);
-            container.innerHTML = '';
-
-            for (let lane = 0; lane < 5; lane++) {
-                const minion = fieldList[lane];
-
-                if (minion) {
-                    const mEl = createCardElement(minion, false);
-                    mEl.className = `minion rarity-${minion.rarity}`;
-                    mEl.oncontextmenu = (e) => { e.preventDefault(); inspectCard(minion); };
-
-                    if (minion.stackedOnTop) {
-                        mEl.innerHTML += `<div style="position:absolute; bottom:2px; right:2px; font-size:9px; background:#e67e22; padding:2px; border-radius:3px;">Rider: ${minion.stackedOnTop.name}</div>`;
-                    }
-
-                    if (!isEnemy && selectedHandIndex !== null) {
-                        let selectedCard = player.hand[selectedHandIndex];
-                        if (minion.trait === 'mascotPiggyback' && selectedCard.faction === 'student' && selectedCard.type === 'minion') {
-                            mEl.classList.add('piggyback-target');
-                            mEl.onclick = () => stackOnMascot(lane);
-                        }
-                    }
-
-                    if (isEnemy && selectedTrickIndex !== null) {
-                        mEl.classList.add('targetable');
-                        mEl.onclick = () => handleEnemyMinionClick(lane, mEl);
-                    }
-
-                    if (!isEnemy && selectedPiggybackIndex !== null) {
-                        mEl.classList.add('piggyback-target');
-                        mEl.onclick = () => applyPiggyback(lane);
-                    }
-
-                    container.appendChild(mEl);
-                } else {
-                    const slot = document.createElement('div');
-                    slot.className = 'lane-slot';
-                    
-                    if (!isEnemy && selectedHandIndex !== null) {
-                        slot.classList.add('selectable');
-                        slot.innerText = `Lane ${lane + 1}\n(Click to Place)`;
-                        slot.onclick = () => placeMinionInLane(lane);
-                    } else {
-                        slot.innerText = `Lane ${lane + 1}`;
-                    }
-
-                    container.appendChild(slot);
-                }
-            }
-        }
-
-        function handleHandCardClick(index) {
-            if (!isPlayerActiveTurn()) return;
-
-            const card = player.hand[index];
-            if (card.cost > player.points) return log("<span style='color:#e74c3c;'>Not enough points!</span>");
-
-            if (card.id === 'eg_senior_rebellion') {
-                player.points -= card.cost;
-                log("<b>SENIOR YEAR REBELLION TRIGGERED!</b> All students gain +4/+4 and immediate bonus attack!");
-                player.field.forEach((m, idx) => {
-                    if (m) {
-                        m.att += 4;
-                        m.hp += 4;
-                        m.maxHp += 4;
-                        // Recess Rush damage regardless of teacher in lane
-                        enemy.hp = Math.max(0, enemy.hp - 2);
-                        showDamage(document.getElementById('enemy-banner'), 2);
-
-                        // Immediate bonus attack
-                        if (enemy.field[idx]) {
-                            enemy.field[idx].hp -= m.att;
-                            if (enemy.field[idx].hp <= 0) enemy.field[idx] = null;
-                        } else {
-                            enemy.hp = Math.max(0, enemy.hp - m.att);
-                            showDamage(document.getElementById('enemy-banner'), m.att);
-                        }
-                    }
-                });
-                player.hand.splice(index, 1);
-                checkGameOver();
-                updateUI();
-                return;
-            }
-
-            if (card.trait === 'piggyback') {
-                if (!player.field.some(m => m !== null)) return log("<span style='color:#e74c3c;'>No friendly student to piggyback onto!</span>");
-                selectedPiggybackIndex = index;
-                selectedHandIndex = null;
-                log("Select a friendly student to piggyback onto!");
-                updateUI();
-                return;
-            }
-
-            if (card.type === 'minion') {
-                selectedHandIndex = index;
-                selectedTrickIndex = null;
-                log(`Selected <b>${card.name}</b>. Click a lane slot or Mascot card.`);
-                updateUI();
-            } else if (card.type === 'trick') {
-                selectedHandIndex = null;
-                if (card.damage) {
-                    if (!enemy.field.some(m => m !== null)) {
-                        player.points -= card.cost;
-                        enemy.hp = Math.max(0, enemy.hp - card.damage);
-                        showDamage(document.getElementById('enemy-banner'), card.damage);
-                        log(`Used <b>${card.name}</b> on Enemy Hero for ${card.damage} DMG.`);
-                        player.hand.splice(index, 1);
-                        checkGameOver();
-                    } else {
-                        selectedTrickIndex = index;
-                        log("Select an enemy minion to target!");
-                        updateUI();
-                        return;
-                    }
-                } else {
-                    player.points -= card.cost;
-                    if (card.damageHero) {
-                        enemy.hp = Math.max(0, enemy.hp - card.damageHero);
-                        showDamage(document.getElementById('enemy-banner'), card.damageHero);
-                    }
-                    if (card.draw) drawCard(player);
-                    player.hand.splice(index, 1);
-                }
-            }
-            updateUI();
-        }
-
-        function stackOnMascot(laneIndex) {
-            if (selectedHandIndex === null) return;
-            const topCard = player.hand[selectedHandIndex];
-            const baseMascot = player.field[laneIndex];
-
-            player.points -= topCard.cost;
-            baseMascot.att += topCard.att;
-            baseMascot.hp += topCard.hp;
-            baseMascot.maxHp += topCard.hp;
-            baseMascot.stackedOnTop = topCard;
-
-            log(`Stacked <b>${topCard.name}</b> onto Mascot! (+${topCard.att}/+${topCard.hp})`);
-            player.hand.splice(selectedHandIndex, 1);
-            selectedHandIndex = null;
-            updateUI();
-        }
-
-        function placeMinionInLane(laneIndex) {
-            if (selectedHandIndex === null) return;
-
-            const card = player.hand[selectedHandIndex];
-            player.points -= card.cost;
-
-            let newMinion = { ...card, hp: card.hp, maxHp: card.maxHp || card.hp };
-
-            if (newMinion.trait === 'recessRush' && enemy.field[laneIndex] === null) {
-                enemy.hp = Math.max(0, enemy.hp - 2);
-                showDamage(document.getElementById('enemy-banner'), 2);
-                log(`<b>Recess Rush!</b> ${newMinion.name} dealt 2 direct damage to Enemy Hero!`);
-            }
-
-            player.field[laneIndex] = newMinion;
-            player.hand.splice(selectedHandIndex, 1);
-            
-            log(`You summoned <b>${newMinion.name}</b> in Lane ${laneIndex + 1}.`);
-
-            selectedHandIndex = null;
-            selectedTrickIndex = null;
-            selectedPiggybackIndex = null;
-
-            updateUI();
-        }
-
-        function applyPiggyback(targetLane) {
-            if (selectedPiggybackIndex === null) return;
-            const card = player.hand[selectedPiggybackIndex];
-
-            player.points -= card.cost;
-            const target = player.field[targetLane];
-            target.att += 1;
-            target.hp += 2;
-            target.maxHp += 2;
-
-            log(`Piggybacked onto <b>${target.name}</b> (+1/+2)!`);
-            player.hand.splice(selectedPiggybackIndex, 1);
-            selectedPiggybackIndex = null;
-            updateUI();
-        }
-
-        function handleEnemyMinionClick(targetLane, element) {
-            if (selectedTrickIndex !== null && isPlayerActiveTurn()) {
-                const card = player.hand[selectedTrickIndex];
-                player.points -= card.cost;
-                const target = enemy.field[targetLane];
-                
-                target.hp -= card.damage;
-                showDamage(element, card.damage);
-                log(`Used <b>${card.name}</b> on ${target.name} for ${card.damage} DMG.`);
-
-                if (target.trait === 'chalkDust') {
-                    triggerChalkDust(enemy.field, targetLane);
-                }
-
-                if (target.hp <= 0) enemy.field[targetLane] = null;
-
-                player.hand.splice(selectedTrickIndex, 1);
-                selectedTrickIndex = null;
-                checkGameOver();
-                updateUI();
-            }
-        }
-
-        function triggerChalkDust(field, laneIndex) {
-            log("<b>Chalk Dust!</b> Blinding adjacent lane opponents (-1 ATK)!");
-            [-1, 1].forEach(offset => {
-                let adjLane = laneIndex + offset;
-                if (adjLane >= 0 && adjLane < 5) {
-                    let adjMinion = (field === enemy.field) ? player.field[adjLane] : enemy.field[adjLane];
-                    if (adjMinion) adjMinion.att = Math.max(0, adjMinion.att - 1);
-                }
-            });
-        }
-
-        function runAIPhase() {
-            let playable = enemy.hand
-                .map((card, idx) => ({ card, idx }))
-                .filter(item => item.card.cost <= enemy.points);
-
-            let minionItems = playable.filter(i => i.card.type === 'minion');
-            let emptyLanes = enemy.field.map((m, idx) => m === null ? idx : null).filter(idx => idx !== null);
-
-            if (minionItems.length > 0 && emptyLanes.length > 0) {
-                let best = minionItems[0];
-                let chosenLane = emptyLanes[Math.floor(Math.random() * emptyLanes.length)];
-
-                enemy.points -= best.card.cost;
-                let newMinion = { ...best.card, hp: best.card.hp, maxHp: best.card.maxHp || best.card.hp };
-
-                if (newMinion.trait === 'recessRush' && player.field[chosenLane] === null) {
-                    player.hp = Math.max(0, player.hp - 2);
-                    showDamage(document.getElementById('player-banner'), 2);
-                    log(`<b>Recess Rush!</b> CPU ${newMinion.name} dealt 2 direct damage to You!`);
-                }
-
-                enemy.field[chosenLane] = newMinion;
-                enemy.hand.splice(best.idx, 1);
-                log(`CPU summoned <b>${newMinion.name}</b> in Lane ${chosenLane + 1}.`);
-            }
-
-            updateUI();
-            setTimeout(() => {
-                if (currentPhase === 'teacher') startPhase('student');
-                else if (currentPhase === 'student') startPhase('fight');
-            }, 1000);
-        }
-
-        async function runFightPhase() {
-            for (let i = 0; i < 5; i++) {
-                let pMinion = player.field[i];
-                let eMinion = enemy.field[i];
-
-                if (pMinion && eMinion) {
-                    eMinion.hp -= pMinion.att;
-                    pMinion.hp -= eMinion.att;
-                    log(`Lane ${i+1}: ${pMinion.name} & ${eMinion.name} fought!`);
-
-                    if (pMinion.trait === 'chalkDust') triggerChalkDust(player.field, i);
-                    if (eMinion.trait === 'chalkDust') triggerChalkDust(enemy.field, i);
-
-                } else if (pMinion && !eMinion) {
-                    enemy.hp = Math.max(0, enemy.hp - pMinion.att);
-                    showDamage(document.getElementById('enemy-banner'), pMinion.att);
-                    log(`Lane ${i+1}: Your ${pMinion.name} hit Enemy Hero for ${pMinion.att} DMG!`);
-                } else if (!pMinion && eMinion) {
-                    player.hp = Math.max(0, player.hp - eMinion.att);
-                    showDamage(document.getElementById('player-banner'), eMinion.att);
-                    log(`Lane ${i+1}: Enemy ${eMinion.name} hit You for ${eMinion.att} DMG!`);
-                }
-
-                if (player.field[i] && player.field[i].hp <= 0) player.field[i] = null;
-                if (enemy.field[i] && enemy.field[i].hp <= 0) enemy.field[i] = null;
-
-                updateUI();
-                await new Promise(r => setTimeout(r, 800));
-                checkGameOver();
-            }
-
-            setTimeout(() => {
-                round++;
-                player.maxPoints = Math.min(MAX_POINTS, player.maxPoints + 1);
-                enemy.maxPoints = Math.min(MAX_POINTS, enemy.maxPoints + 1);
-                player.points = player.maxPoints;
-                enemy.points = enemy.maxPoints;
-
-                drawCard(player); drawCard(enemy);
-                log(`<b>--- ROUND ${round} ---</b>`);
-                startPhase('teacher');
-            }, 1000);
-        }
-
-        function checkGameOver() {
-            if (player.hp <= 0 && enemy.hp <= 0) {
-                alert("It's a Draw!");
-                showScreen('mode-screen');
-            } else if (player.hp <= 0) {
-                alert("Game Over! Defeated!");
-                showScreen('mode-screen');
-            } else if (enemy.hp <= 0) {
-                playerProfile.rulers += 15;
-                alert("Victory! Earned +15 Golden Rulers! 📏");
-                updateRulersDisplay();
-                showScreen('mode-screen');
-            }
         }
     </script>
 </body>
